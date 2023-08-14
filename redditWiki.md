@@ -32,6 +32,8 @@ If this is enabled, posts that are removed as soon as they are posted will not c
 
 If this is disabled, all posts will count towards the quota, even if they are removed as soon as they are posted for any reason.
 
+Please note that posts that are either later deleted by the author or removed by a moderator will always count towards the quota.
+
 ## Removal Settings
 
 These settings let you ignore certain users and configure a removal reason.
