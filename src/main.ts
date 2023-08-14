@@ -1,51 +1,144 @@
 import {Devvit} from "@devvit/public-api";
+import {onAppEvent, onPostCreate, onPostSubmit, onRunClearOldPosts} from "./handlers/events.js";
+import {logError} from "./helpers/miscHelpers.js";
+import {LABELS, HELP_TEXT, DEFAULTS} from "./constants.js";
+import {validateCustomDateTemplate, validateCustomLocale, validateCustomTimezone, validateQuotaAmount, validateQuotaPeriod} from "./handlers/validators.js";
 
-/**
- * Declare the custom actions we'd like to add to the subreddit
- */
-Devvit.addMenuItem({
-    location: "post", // location where the menu item appears
-    label: "Custom Post Action", // text to display in the menu (keep it short!)
-    onPress: async (event, context) => {
-        const message = `Post action! Post ID: ${event.targetId}`;
-        console.log(message);
-        const {ui} = context;
-        ui.showToast(message);
+Devvit.configure({
+    kvStore: true,
+    redditAPI: true,
+});
+
+Devvit.addSchedulerJob({
+    name: "clearOldPosts",
+    onRun: onRunClearOldPosts,
+});
+
+// Handle enforcement & tracking
+Devvit.addTrigger({
+    event: "PostCreate",
+    onEvent: onPostCreate,
+});
+
+// Handle tracking
+Devvit.addTrigger({
+    event: "PostSubmit",
+    onEvent: onPostSubmit,
+});
+
+// Start clear job on install
+Devvit.addTrigger({
+    event: "AppInstall",
+    onEvent: async (_, context) => {
+        try {
+            await context.scheduler.runJob({cron: "* * * * *", name: "clearOldPosts", data: {}});
+        } catch (e) {
+            logError("Failed to schedule clearOldPosts job on AppInstall", e);
+            throw e;
+        }
     },
 });
 
-Devvit.addMenuItem({
-    location: "post",
-    forUserType: "moderator", // limit the action to moderators
-    label: "Custom Post Action, only for mods!",
-    onPress: async (event, context) => {
-        const message = `Post action for mods! Post ID: ${event.targetId}`;
-        console.log(message);
-        const {ui} = context;
-        ui.showToast(message);
-    },
+// Schedule clear job after install/upgrade
+Devvit.addTrigger({
+    event: "AppInstall",
+    onEvent: onAppEvent,
+});
+Devvit.addTrigger({
+    event: "AppUpgrade",
+    onEvent: onAppEvent,
 });
 
-Devvit.addMenuItem({
-    location: "comment",
-    label: "Custom Comment Action",
-    onPress: async (event, context) => {
-        const message = `Comment action! Comment ID: ${event.targetId}`;
-        console.log(message);
-        const {ui} = context;
-        ui.showToast(message);
+Devvit.addSettings([
+    {
+        type: "group",
+        label: LABELS.QUOTA_SETTINGS,
+        helpText: HELP_TEXT.QUOTA_SETTINGS,
+        fields: [
+            {
+                type: "number",
+                name: "quotaAmount",
+                defaultValue: DEFAULTS.QUOTA_AMOUNT,
+                label: LABELS.QUOTA_AMOUNT,
+                helpText: HELP_TEXT.QUOTA_AMOUNT,
+                onValidate: validateQuotaAmount,
+            },
+            {
+                type: "number",
+                name: "quotaPeriod",
+                defaultValue: DEFAULTS.QUOTA_PERIOD,
+                label: LABELS.QUOTA_PERIOD,
+                helpText: HELP_TEXT.QUOTA_PERIOD,
+                onValidate: validateQuotaPeriod,
+            },
+            {
+                type: "boolean",
+                name: "ignoreAutoRemoved",
+                defaultValue: DEFAULTS.IGNORE_AUTO_REMOVED,
+                label: LABELS.IGNORE_AUTO_REMOVED,
+                helpText: HELP_TEXT.IGNORE_AUTO_REMOVED,
+            },
+        ],
     },
-});
-
-Devvit.addMenuItem({
-    location: "subreddit",
-    label: "Custom Subreddit Action",
-    onPress: async (event, context) => {
-        const message = `Subreddit action! Subreddit ID: ${event.targetId}`;
-        console.log(message);
-        const {ui} = context;
-        ui.showToast(message);
+    {
+        type: "group",
+        label: LABELS.REMOVAL_SETTINGS,
+        helpText: HELP_TEXT.REMOVAL_SETTINGS,
+        fields: [
+            {
+                type: "boolean",
+                name: "ignoreModerators",
+                defaultValue: DEFAULTS.IGNORE_MODERATORS,
+                label: LABELS.IGNORE_MODERATORS,
+                helpText: HELP_TEXT.IGNORE_MODERATORS,
+            },
+            {
+                type: "boolean",
+                name: "ignoreContributors",
+                defaultValue: DEFAULTS.IGNORE_CONTRIBUTORS,
+                label: LABELS.IGNORE_CONTRIBUTORS,
+                helpText: HELP_TEXT.IGNORE_CONTRIBUTORS,
+            },
+            {
+                type: "paragraph",
+                name: "quotaRemovalReason",
+                defaultValue: DEFAULTS.QUOTA_REMOVAL_REASON,
+                label: LABELS.QUOTA_REMOVAL_REASON,
+                helpText: HELP_TEXT.QUOTA_REMOVAL_REASON,
+            },
+            {
+                type: "group",
+                label: LABELS.CUSTOM_DATE_GROUP,
+                helpText: HELP_TEXT.CUSTOM_DATE_GROUP,
+                fields: [
+                    {
+                        type: "string",
+                        name: "customTimeformat",
+                        defaultValue: DEFAULTS.CUSTOM_DATE_TEMPLATE,
+                        label: LABELS.CUSTOM_DATE_TEMPLATE,
+                        helpText: HELP_TEXT.CUSTOM_DATE_TEMPLATE,
+                        onValidate: validateCustomDateTemplate,
+                    },
+                    {
+                        type: "string",
+                        name: "customTimezone",
+                        defaultValue: DEFAULTS.CUSTOM_TIMEZONE,
+                        label: LABELS.CUSTOM_TIMEZONE,
+                        helpText: HELP_TEXT.CUSTOM_TIMEZONE,
+                        onValidate: validateCustomTimezone,
+                    },
+                    {
+                        type: "string",
+                        name: "customLocale",
+                        defaultValue: DEFAULTS.CUSTOM_LOCALE,
+                        label: LABELS.CUSTOM_LOCALE,
+                        helpText: HELP_TEXT.CUSTOM_LOCALE,
+                        onValidate: validateCustomLocale,
+                    },
+                ],
+            },
+        ],
     },
-});
+]);
 
 export default Devvit;
