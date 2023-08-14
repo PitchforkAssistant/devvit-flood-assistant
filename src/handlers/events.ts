@@ -29,9 +29,9 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     const ignoreModerators = await context.settings.get<boolean>("ignoreModerators");
     const ignoreContributors = await context.settings.get<boolean>("ignoreContributors");
     const quotaRemovalReason = await context.settings.get<string>("quotaRemovalReason") ?? "";
-    const customTimeformat = await context.settings.get<string>("ignoreModerators") ?? "";
-    const customTimezone = await context.settings.get<string>("ignoreContributors") ?? "00:00";
-    const customLocale = getLocaleFromString(await context.settings.get<string>("quotaRemovalReason") ?? "") ?? enUS;
+    const customTimeformat = await context.settings.get<string>("customTimeformat") ?? "yyyy-MM-dd hh-mm-ss";
+    const customTimezone = await context.settings.get<string>("customTimezone") ?? "00:00";
+    const customLocale = getLocaleFromString(await context.settings.get<string>("customLocale") ?? "") ?? enUS;
     if (!quotaAmount || !quotaPeriod) {
         console.error(`One of the app settings is invalid or undefined for ${subredditName}`);
         return;
