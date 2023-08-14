@@ -1,7 +1,7 @@
 import {PostCreate, PostSubmit, AppInstall, AppUpgrade} from "@devvit/protos";
 import {Context, OnTriggerEvent, ScheduledJobEvent} from "@devvit/public-api";
 import {addPostToKvStore, clearOldPostsByAuthor, getPostsByAuthor} from "../helpers/kvStoreHelpers.js";
-import {logError} from "../helpers/miscHelpers.js";
+import {logError, toNumberOrDefault} from "../helpers/miscHelpers.js";
 import {hasPerformedActions, isContributor, isModerator} from "../helpers/redditHelpers.js";
 import {replacePlaceholders} from "../helpers/placeholderHelpers.js";
 import {getLocaleFromString} from "../helpers/dateHelpers.js";
@@ -140,7 +140,7 @@ export async function onAppEvent (_: OnTriggerEvent<AppInstall | AppUpgrade>, co
             }
         }
 
-        // Schedule a new clearOldPosts job.
+        // Schedule a new clearOldPosts job for every 5 minutes.
         console.log("Scheduling new clearOldPosts job");
         const newJob = await context.scheduler.runJob({cron: "*/5 * * * *", name: "clearOldPosts", data: {}});
         console.log(`New clearOldPosts job scheduled ${newJob}`);
@@ -154,11 +154,8 @@ export async function onRunClearOldPosts (event: ScheduledJobEvent, context: Con
     console.log("running onRunClearOldPosts");
 
     // Clear posts older than the quota period from the kv store.
-    const quotaPeriod = await context.settings.get<number>("quotaPeriod");
-    if (!quotaPeriod) {
-        console.error("quotaPeriod is undefined in onRunClearOldPosts");
-        return;
-    }
+    // Default to the maximum of a week if the quota period is invalid (sometimes happens when the app is installed without hitting save on the settings page).
+    const quotaPeriod = toNumberOrDefault(await context.settings.get<number>("quotaPeriod"), 168);
 
     const kvStoreKeys = await context.kvStore.list().catch(e => {
         logError("context.kvStore.list failed in onRunClearOldPosts", e); return [];

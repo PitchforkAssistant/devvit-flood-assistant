@@ -55,6 +55,7 @@ export const ERRORS = {
     QUOTA_AMOUNT_NOT_INTEGER: "This value must be an integer, how would you even make a fractional number of posts?",
     QUOTA_PERIOD_NAN: "This value must be a number.",
     QUOTA_PERIOD_NEGATIVE: "This value must be a positive number, time travel is not supported.",
+    QUOTA_PERIOD_TOO_LARGE: "Please do not set to quota period to more than 168 hours (7 days). The amount of posts that can be stored in the app storage is limited.",
     INVALID_TIMEFORMAT: `Invalid timeformat, see: ${LINKS.TIMEFORMAT}`,
     INVALID_TIMEZONE: "That is not a valid UTC offset or TZ identifier.",
     INVALID_LOCALE: "That is not a valid locale.",

@@ -25,6 +25,9 @@ export async function validateQuotaPeriod (event: SettingsFormFieldValidatorEven
     if (value < 0) {
         return ERRORS.QUOTA_PERIOD_NEGATIVE;
     }
+    if (value > 168) {
+        return ERRORS.QUOTA_PERIOD_TOO_LARGE;
+    }
 }
 
 export async function validateCustomDateTemplate (event: SettingsFormFieldValidatorEvent<string>) {
