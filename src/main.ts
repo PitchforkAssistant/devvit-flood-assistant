@@ -26,19 +26,6 @@ Devvit.addTrigger({
     onEvent: onPostSubmit,
 });
 
-// Start clear job on install
-Devvit.addTrigger({
-    event: "AppInstall",
-    onEvent: async (_, context) => {
-        try {
-            await context.scheduler.runJob({cron: "* * * * *", name: "clearOldPosts", data: {}});
-        } catch (e) {
-            logError("Failed to schedule clearOldPosts job on AppInstall", e);
-            throw e;
-        }
-    },
-});
-
 // Schedule clear job after install/upgrade
 Devvit.addTrigger({
     event: "AppInstall",
