@@ -1,6 +1,5 @@
 import {Devvit} from "@devvit/public-api";
-import {onAppEvent, onPostCreate, onPostSubmit, onRunClearOldPosts} from "./handlers/events.js";
-import {logError} from "./helpers/miscHelpers.js";
+import {onAppChanged, onPostCreate, onPostSubmit, onRunClearOldPosts} from "./handlers/events.js";
 import {LABELS, HELP_TEXT, DEFAULTS} from "./constants.js";
 import {validateCustomDateTemplate, validateCustomLocale, validateCustomTimezone, validateQuotaAmount, validateQuotaPeriod} from "./handlers/validators.js";
 
@@ -28,12 +27,8 @@ Devvit.addTrigger({
 
 // Schedule clear job after install/upgrade
 Devvit.addTrigger({
-    event: "AppInstall",
-    onEvent: onAppEvent,
-});
-Devvit.addTrigger({
-    event: "AppUpgrade",
-    onEvent: onAppEvent,
+    events: ["AppInstall", "AppUpgrade"],
+    onEvent: onAppChanged,
 });
 
 Devvit.addSettings([

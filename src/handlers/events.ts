@@ -128,7 +128,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
     }
 }
 
-export async function onAppEvent (_: OnTriggerEvent<AppInstall | AppUpgrade>, context: Context) {
+export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, context: Context) {
     try {
         // Cancel any existing clearOldPosts jobs.
         console.log("Clearing existing clearOldPosts jobs");
