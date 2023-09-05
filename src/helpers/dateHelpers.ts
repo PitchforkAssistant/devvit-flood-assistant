@@ -19,7 +19,7 @@ export function getLocaleFromString (input: string): Locale | undefined {
 
     const locale = Object.keys(locales).find(key => key.toLowerCase() === processedInput);
     if (locale) {
-        return locales[locale] as Locale;
+        return locales[locale as keyof unknown] as Locale;
     }
 }
 

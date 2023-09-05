@@ -21,7 +21,7 @@ export function replacePlaceholders (text: string, post: Post, timeformat: strin
     const postId = post.id.substring(3) ?? "";
     const time = new Date();
     const createdAt = post.createdAt;
-    const replacements = {
+    const replacements: Record<string, string> = {
         "{{author}}": post.authorName ?? "",
         "{{subreddit}}": post.subredditName ?? "",
         "{{body}}": post.body ?? "",

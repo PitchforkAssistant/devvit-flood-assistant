@@ -10,12 +10,12 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@devvit/public-api": "0.10.2",
+    "@devvit/public-api": "0.10.4",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0"
   },
   "devDependencies": {
-    "@devvit/tsconfig": "0.10.2",
+    "@devvit/tsconfig": "0.10.4",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.46.0",

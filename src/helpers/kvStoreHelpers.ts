@@ -1,7 +1,8 @@
 import {KVStore} from "@devvit/public-api";
+import {JSONObject} from "@devvit/shared-types/json.js";
 
 export async function addPostToKvStore (kvStore: KVStore, authorId: string, postId: string, createdAt: number) {
-    let currentValue = await kvStore.get(authorId);
+    let currentValue = await kvStore.get<JSONObject>(authorId);
     if (!currentValue) {
         currentValue = {};
     }

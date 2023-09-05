@@ -1,5 +1,5 @@
 import {PostCreate, PostSubmit, AppInstall, AppUpgrade} from "@devvit/protos";
-import {Context, OnTriggerEvent, ScheduledJobEvent} from "@devvit/public-api";
+import {TriggerContext, OnTriggerEvent, ScheduledJobEvent} from "@devvit/public-api";
 import {addPostToKvStore, clearOldPostsByAuthor, getPostsByAuthor} from "../helpers/kvStoreHelpers.js";
 import {logError, toNumberOrDefault} from "../helpers/miscHelpers.js";
 import {hasPerformedActions, isContributor, isModerator} from "../helpers/redditHelpers.js";
@@ -7,7 +7,7 @@ import {replacePlaceholders} from "../helpers/placeholderHelpers.js";
 import {getLocaleFromString} from "../helpers/dateHelpers.js";
 import {enUS} from "date-fns/locale";
 
-export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: Context) {
+export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: TriggerContext) {
     const authorId = event.author?.id;
     const authorName = event.author?.name;
     const postId = event.post?.id;
@@ -110,7 +110,7 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     }
 }
 
-export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: Context) {
+export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: TriggerContext) {
     const authorId = event.author?.id;
     const postId = event.post?.id;
     const createdAt = event.post?.createdAt;
@@ -128,7 +128,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
     }
 }
 
-export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, context: Context) {
+export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, context: TriggerContext) {
     try {
         // Cancel any existing clearOldPosts jobs.
         console.log("Clearing existing clearOldPosts jobs");
@@ -150,7 +150,7 @@ export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, 
     }
 }
 
-export async function onRunClearOldPosts (event: ScheduledJobEvent, context: Context) {
+export async function onRunClearOldPosts (event: ScheduledJobEvent, context: TriggerContext) {
     console.log("running onRunClearOldPosts");
 
     // Clear posts older than the quota period from the kv store.
