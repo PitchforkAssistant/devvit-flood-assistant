@@ -1,7 +1,7 @@
 import {Devvit} from "@devvit/public-api";
 import {onAppChanged, onPostCreate, onPostSubmit, onRunClearOldPosts} from "./handlers/events.js";
 import {LABELS, HELP_TEXT, DEFAULTS} from "./constants.js";
-import {validateCustomDateTemplate, validateCustomLocale, validateCustomTimezone, validateQuotaAmount, validateQuotaPeriod} from "./handlers/validators.js";
+import {validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
 
 Devvit.configure({
     kvStore: true,
@@ -43,7 +43,7 @@ Devvit.addSettings([
                 defaultValue: DEFAULTS.QUOTA_AMOUNT,
                 label: LABELS.QUOTA_AMOUNT,
                 helpText: HELP_TEXT.QUOTA_AMOUNT,
-                onValidate: validateQuotaAmount,
+                onValidate: validatePositiveInteger,
             },
             {
                 type: "number",
@@ -51,7 +51,7 @@ Devvit.addSettings([
                 defaultValue: DEFAULTS.QUOTA_PERIOD,
                 label: LABELS.QUOTA_PERIOD,
                 helpText: HELP_TEXT.QUOTA_PERIOD,
-                onValidate: validateQuotaPeriod,
+                onValidate: validatePositiveNumber,
             },
             {
                 type: "boolean",
@@ -99,7 +99,7 @@ Devvit.addSettings([
                         defaultValue: DEFAULTS.CUSTOM_DATE_TEMPLATE,
                         label: LABELS.CUSTOM_DATE_TEMPLATE,
                         helpText: HELP_TEXT.CUSTOM_DATE_TEMPLATE,
-                        onValidate: validateCustomDateTemplate,
+                        onValidate: validateCustomDateformat,
                     },
                     {
                         type: "string",
