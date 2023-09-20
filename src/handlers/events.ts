@@ -1,7 +1,7 @@
 import {PostCreate, PostSubmit, AppInstall, AppUpgrade} from "@devvit/protos";
 import {TriggerContext, OnTriggerEvent, ScheduledJobEvent} from "@devvit/public-api";
 import {addPostToKvStore, clearOldPostsByAuthor, getPostsByAuthor} from "../helpers/kvStoreHelpers.js";
-import {toNumberOrDefault, getLocaleFromString, hasPerformedActions, isContributor, isModerator, getRecommendedPlaceholdersFromPost, CustomDateformat, assembleRemovalReason, submitPostReply} from "devvit-helpers";
+import {toNumberOrDefault, getLocaleFromString, hasPerformedActions, isContributor, isModerator, getRecommendedPlaceholdersFromPost, CustomDateformat, assembleRemovalReason, submitPostReply, startSingletonJob} from "devvit-helpers";
 import {enUS} from "date-fns/locale";
 
 export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: TriggerContext) {
@@ -119,20 +119,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
 
 export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, context: TriggerContext) {
     try {
-        // Cancel any existing clearOldPosts jobs.
-        console.log("Clearing existing clearOldPosts jobs");
-        const scheduledJobs = await context.scheduler.listJobs();
-        for (const job of scheduledJobs) {
-            if (job.name === "clearOldPosts") {
-                console.log(`Cancelling clearOldPosts job ${job.id}`);
-                await context.scheduler.cancelJob(job.id);
-            }
-        }
-
-        // Schedule a new clearOldPosts job for every 5 minutes.
-        console.log("Scheduling new clearOldPosts job");
-        const newJob = await context.scheduler.runJob({cron: "*/5 * * * *", name: "clearOldPosts", data: {}});
-        console.log(`New clearOldPosts job scheduled ${newJob}`);
+        await startSingletonJob(context.scheduler, "clearOldPosts", "*/5 * * * *");
     } catch (e) {
         console.error("Failed to schedule clearOldPosts job on AppInstall", e);
         throw e;
