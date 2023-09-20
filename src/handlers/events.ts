@@ -1,10 +1,7 @@
 import {PostCreate, PostSubmit, AppInstall, AppUpgrade} from "@devvit/protos";
 import {TriggerContext, OnTriggerEvent, ScheduledJobEvent} from "@devvit/public-api";
 import {addPostToKvStore, clearOldPostsByAuthor, getPostsByAuthor} from "../helpers/kvStoreHelpers.js";
-import {logError, toNumberOrDefault} from "../helpers/miscHelpers.js";
-import {hasPerformedActions, isContributor, isModerator} from "../helpers/redditHelpers.js";
-import {replacePlaceholders} from "../helpers/placeholderHelpers.js";
-import {getLocaleFromString} from "../helpers/dateHelpers.js";
+import {toNumberOrDefault, getLocaleFromString, hasPerformedActions, isContributor, isModerator, getRecommendedPlaceholdersFromPost, CustomDateformat, assembleRemovalReason, submitPostReply} from "devvit-helpers";
 import {enUS} from "date-fns/locale";
 
 export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: TriggerContext) {
@@ -29,9 +26,11 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     const ignoreModerators = await context.settings.get<boolean>("ignoreModerators");
     const ignoreContributors = await context.settings.get<boolean>("ignoreContributors");
     const quotaRemovalReason = await context.settings.get<string>("quotaRemovalReason") ?? "";
-    const customTimeformat = await context.settings.get<string>("customTimeformat") ?? "yyyy-MM-dd hh-mm-ss";
-    const customTimezone = await context.settings.get<string>("customTimezone") ?? "00:00";
-    const customLocale = getLocaleFromString(await context.settings.get<string>("customLocale") ?? "") ?? enUS;
+    const customDateformat: CustomDateformat = {
+        dateformat: await context.settings.get<string>("customTimeformat") ?? "yyyy-MM-dd hh-mm-ss",
+        timezone: await context.settings.get<string>("customTimezone") ?? "00:00",
+        locale: getLocaleFromString(await context.settings.get<string>("customLocale") ?? "") ?? enUS,
+    };
     if (!quotaAmount || !quotaPeriod) {
         console.error(`One of the app settings is invalid or undefined for ${subredditName}`);
         return;
@@ -74,38 +73,28 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     // Remove the post if the quota has been exceeded.
     if (postsByAuthorInQuotaPeriod >= quotaAmount) {
         console.log(`${postsByAuthorInQuotaPeriod} posts >= ${quotaAmount} quota for ${authorId}, removing ${postId}`);
-        context.reddit.remove(postId, false).catch(e => logError("context.reddit.remove failed in onPostCreate", e));
+        context.reddit.remove(postId, false).catch(e => console.error("context.reddit.remove failed in onPostCreate", e));
         if (quotaRemovalReason) {
-            const commentOptions = {
-                id: postId,
-                text: replacePlaceholders(
-                    quotaRemovalReason,
-                    post,
-                    customTimeformat,
-                    customTimezone,
-                    customLocale,
-                    /* eslint-disable camelcase */
-                    {
-                        author_flair_text: event.post?.authorFlair?.text ?? "",
-                        author_flair_css_class: event.post?.authorFlair?.text ?? "",
-                        author_flair_template_id: event.post?.authorFlair?.text ?? "",
-                        quota_amount: quotaAmount.toString(),
-                        quota_period: quotaPeriod.toString(),
-                    }
-                    /* eslint-enable camelcase */
-                ),
-            };
-            const comment = await context.reddit.submitComment(commentOptions).catch(e => logError("context.reddit.submitComment failed in onPostCreate", e));
-            if (comment) {
-                comment.distinguish(true).catch(e => logError("comment.distinguish failed in onPostCreate", e));
-            }
+            const placeholders = await getRecommendedPlaceholdersFromPost(post, customDateformat);
+            const commentBody = assembleRemovalReason(
+                {body: quotaRemovalReason},
+                placeholders,
+                {
+                    "{{author_flair_text}}": event.post?.authorFlair?.text ?? "",
+                    "{{author_flair_css_class}}": event.post?.authorFlair?.text ?? "",
+                    "{{author_flair_template_id}}": event.post?.authorFlair?.text ?? "",
+                    "{{quota_amount}}": quotaAmount.toString(),
+                    "{{quota_period}}": quotaPeriod.toString(),
+                }
+            );
+            await submitPostReply(context.reddit, postId, commentBody, true, true).catch(e => console.error("submitPostReply failed in onPostCreate", e));
         }
     } else {
         console.log(`${postsByAuthorInQuotaPeriod} posts < ${quotaAmount} quota for ${authorId}, not actioning ${postId}`);
         // We know the post hasn't been removed by us or someone else, so we can log it to the kv store if ignoreAutoRemoved is true.
         if (ignoreAutoRemoved) {
             console.log(`logging post in onPostCreate (ignoreAutoRemoved) ${postId}`);
-            await addPostToKvStore(context.kvStore, authorId, postId, createdAt).catch(e => logError("addPostToKvStore failed in onPostCreate", e));
+            await addPostToKvStore(context.kvStore, authorId, postId, createdAt).catch(e => console.error("addPostToKvStore failed in onPostCreate", e));
         }
     }
 }
@@ -124,7 +113,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
     const ignoreAutoRemoved = await context.settings.get<boolean>("ignoreAutoRemoved");
     if (!ignoreAutoRemoved) {
         console.log(`logging post in onPostSubmit (!ignoreAutoRemoved) ${postId}`);
-        addPostToKvStore(context.kvStore, authorId, postId, createdAt).catch(e => logError("addPostToKvStore failed in onPostSubmit", e));
+        addPostToKvStore(context.kvStore, authorId, postId, createdAt).catch(e => console.error("addPostToKvStore failed in onPostSubmit", e));
     }
 }
 
@@ -145,7 +134,7 @@ export async function onAppChanged (_: OnTriggerEvent<AppInstall | AppUpgrade>, 
         const newJob = await context.scheduler.runJob({cron: "*/5 * * * *", name: "clearOldPosts", data: {}});
         console.log(`New clearOldPosts job scheduled ${newJob}`);
     } catch (e) {
-        logError("Failed to schedule clearOldPosts job on AppInstall", e);
+        console.error("Failed to schedule clearOldPosts job on AppInstall", e);
         throw e;
     }
 }
@@ -158,8 +147,8 @@ export async function onRunClearOldPosts (event: ScheduledJobEvent, context: Tri
     const quotaPeriod = toNumberOrDefault(await context.settings.get<number>("quotaPeriod"), 168);
 
     const kvStoreKeys = await context.kvStore.list().catch(e => {
-        logError("context.kvStore.list failed in onRunClearOldPosts", e); return [];
+        console.error("context.kvStore.list failed in onRunClearOldPosts", e); return [];
     });
     kvStoreKeys.forEach(key => void clearOldPostsByAuthor(context.kvStore, key, quotaPeriod)
-        .catch(e => logError(`clearOldPostsByAuthor ${key} failed in onRunClearOldPosts`, e)));
+        .catch(e => console.error(`clearOldPostsByAuthor ${key} failed in onRunClearOldPosts`, e)));
 }
