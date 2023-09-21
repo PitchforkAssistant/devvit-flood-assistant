@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@devvit/public-api": "0.10.4",
+    "@devvit/shared-types": "0.10.4",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
-    "devvit-helpers": "0.2.15"
+    "devvit-helpers": "0.2.19"
   },
   "devDependencies": {
     "@devvit/tsconfig": "0.10.4",

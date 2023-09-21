@@ -1,7 +1,8 @@
 import {Devvit} from "@devvit/public-api";
-import {onAppChanged, onPostCreate, onPostSubmit, onRunClearOldPosts} from "./handlers/events.js";
+import {onAppChanged, onModAction, onPostCreate, onPostDelete, onPostSubmit} from "./handlers/events.js";
 import {LABELS, HELP_TEXT, DEFAULTS} from "./constants.js";
 import {validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
+import {onRunClearOldPosts} from "./handlers/scheduler.js";
 
 Devvit.configure({
     kvStore: true,
@@ -13,7 +14,7 @@ Devvit.addSchedulerJob({
     onRun: onRunClearOldPosts,
 });
 
-// Handle enforcement & tracking
+// Handle enforcement
 Devvit.addTrigger({
     event: "PostCreate",
     onEvent: onPostCreate,
@@ -23,6 +24,18 @@ Devvit.addTrigger({
 Devvit.addTrigger({
     event: "PostSubmit",
     onEvent: onPostSubmit,
+});
+
+// Handle ignoreAutoRemoved and ignoreRemoved options
+Devvit.addTrigger({
+    event: "ModAction",
+    onEvent: onModAction,
+});
+
+// Handle ignoreDeleted option
+Devvit.addTrigger({
+    event: "PostDelete",
+    onEvent: onPostDelete,
 });
 
 // Schedule clear job after install/upgrade
@@ -55,20 +68,6 @@ Devvit.addSettings([
             },
             {
                 type: "boolean",
-                name: "ignoreAutoRemoved",
-                defaultValue: DEFAULTS.IGNORE_AUTO_REMOVED,
-                label: LABELS.IGNORE_AUTO_REMOVED,
-                helpText: HELP_TEXT.IGNORE_AUTO_REMOVED,
-            },
-        ],
-    },
-    {
-        type: "group",
-        label: LABELS.REMOVAL_SETTINGS,
-        helpText: HELP_TEXT.REMOVAL_SETTINGS,
-        fields: [
-            {
-                type: "boolean",
                 name: "ignoreModerators",
                 defaultValue: DEFAULTS.IGNORE_MODERATORS,
                 label: LABELS.IGNORE_MODERATORS,
@@ -82,16 +81,75 @@ Devvit.addSettings([
                 helpText: HELP_TEXT.IGNORE_CONTRIBUTORS,
             },
             {
+                type: "boolean",
+                name: "ignoreAutoRemoved",
+                defaultValue: DEFAULTS.IGNORE_AUTO_REMOVED,
+                label: LABELS.IGNORE_AUTO_REMOVED,
+                helpText: HELP_TEXT.IGNORE_AUTO_REMOVED,
+            },
+            {
+                type: "boolean",
+                name: "ignoreRemoved",
+                defaultValue: DEFAULTS.IGNORE_REMOVED,
+                label: LABELS.IGNORE_REMOVED,
+                helpText: HELP_TEXT.IGNORE_REMOVED,
+            },
+            {
+                type: "boolean",
+                name: "ignoreDeleted",
+                defaultValue: DEFAULTS.IGNORE_DELETED,
+                label: LABELS.IGNORE_DELETED,
+                helpText: HELP_TEXT.IGNORE_DELETED,
+            },
+        ],
+    },
+    {
+        type: "group",
+        label: LABELS.REMOVAL_SETTINGS,
+        helpText: HELP_TEXT.REMOVAL_SETTINGS,
+        fields: [
+            {
+                type: "string",
+                name: "removalReasonId",
+                label: LABELS.REMOVAL_REASON_ID,
+                helpText: HELP_TEXT.REMOVAL_REASON_ID,
+            },
+            {
                 type: "paragraph",
-                name: "quotaRemovalReason",
-                defaultValue: DEFAULTS.QUOTA_REMOVAL_REASON,
-                label: LABELS.QUOTA_REMOVAL_REASON,
-                helpText: HELP_TEXT.QUOTA_REMOVAL_REASON,
+                name: "removalComment",
+                defaultValue: DEFAULTS.REMOVAL_COMMENT,
+                label: LABELS.REMOVAL_COMMENT,
+                helpText: HELP_TEXT.REMOVAL_COMMENT,
             },
             {
                 type: "group",
-                label: LABELS.CUSTOM_DATE_GROUP,
-                helpText: HELP_TEXT.CUSTOM_DATE_GROUP,
+                label: LABELS.REMOVAL_FLAIR_SETTINGS,
+                helpText: HELP_TEXT.REMOVAL_FLAIR_SETTINGS,
+                fields: [
+                    {
+                        type: "string",
+                        name: "removalFlairText",
+                        label: LABELS.REMOVAL_FLAIR_TEXT,
+                        helpText: HELP_TEXT.REMOVAL_FLAIR_TEXT,
+                    },
+                    {
+                        type: "string",
+                        name: "removalFlairCss",
+                        label: LABELS.REMOVAL_FLAIR_CSS,
+                        helpText: HELP_TEXT.REMOVAL_FLAIR_CSS,
+                    },
+                    {
+                        type: "string",
+                        name: "removalFlairId",
+                        label: LABELS.REMOVAL_FLAIR_ID,
+                        helpText: HELP_TEXT.REMOVAL_FLAIR_ID,
+                    },
+                ],
+            },
+            {
+                type: "group",
+                label: LABELS.CUSTOM_DATE_SETTINGS,
+                helpText: HELP_TEXT.CUSTOM_DATE_SETTINGS,
                 fields: [
                     {
                         type: "string",

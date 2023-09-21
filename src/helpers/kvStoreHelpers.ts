@@ -15,21 +15,38 @@ export async function addPostToKvStore (kvStore: KVStore, authorId: string, post
     }
 }
 
+export async function removePostFromKvStore (kvStore: KVStore, authorId: string, postId: string) {
+    const currentValue = await kvStore.get<JSONObject>(authorId);
+    if (!currentValue) {
+        return;
+    }
+
+    if (postId in currentValue) {
+        Reflect.deleteProperty(currentValue, postId);
+        await kvStore.put(authorId, currentValue);
+    }
+}
+
 export async function getPostsByAuthor (kvStore: KVStore, authorId: string): Promise<Record<string, number>> {
     const posts = await kvStore.get<Record<string, number>>(authorId);
     return posts ?? {};
 }
 
-export async function clearOldPostsByAuthor (kvStore: KVStore, authorId: string, maxAgeHours: number) {
+export async function clearOldPostsByAuthor (kvStore: KVStore, authorId: string, maxAgeHours: number): Promise<Record<string, number>> {
     console.log(`clearOldPostsByAuthor for user ${authorId}`);
+
     const posts = await getPostsByAuthor(kvStore, authorId);
     console.log(`old value for ${authorId}: ${JSON.stringify(posts)}`);
+
     const maxAge = Date.now() - maxAgeHours * 60 * 60 * 1000;
-    for (const post in posts) {
-        if (posts[post] < maxAge) {
-            delete posts[post];
+    const newPosts: Record<string, number> = {};
+    for (const [postId, postAge] of Object.entries(posts)) {
+        if (postAge >= maxAge) {
+            newPosts[postId] = postAge;
         }
     }
-    console.log(`new value for ${authorId}: ${JSON.stringify(posts)}`);
-    await kvStore.put(authorId, posts);
+
+    console.log(`new value for ${authorId}: ${JSON.stringify(newPosts)}`);
+    await kvStore.put(authorId, newPosts);
+    return newPosts;
 }
