@@ -47,6 +47,15 @@ export async function clearOldPostsByAuthor (kvStore: KVStore, authorId: string,
     }
 
     console.log(`new value for ${authorId}: ${JSON.stringify(newPosts)}`);
-    await kvStore.put(authorId, newPosts);
+    if (Object.keys(newPosts).length === 0) {
+        console.log(`no posts remaining for ${authorId}, deleting key`);
+        await kvStore.delete(authorId);
+    } else if (Object.keys(newPosts).length === Object.keys(posts).length) {
+        console.log(`no changes to ${authorId}`);
+    } else {
+        console.log(`removing ${Object.keys(posts).length - Object.keys(newPosts).length} stored posts from ${authorId}`);
+        await kvStore.put(authorId, newPosts);
+    }
+
     return newPosts;
 }

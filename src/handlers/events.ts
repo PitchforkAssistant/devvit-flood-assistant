@@ -1,7 +1,7 @@
 import {PostCreate, PostSubmit, AppInstall, AppUpgrade, PostDelete, ModAction} from "@devvit/protos";
 import {TriggerContext, OnTriggerEvent, SetFlairOptions} from "@devvit/public-api";
 import {addPostToKvStore, clearOldPostsByAuthor, getPostsByAuthor, removePostFromKvStore} from "../helpers/kvStoreHelpers.js";
-import {getLocaleFromString, hasPerformedActions, isContributor, isModerator, getRecommendedPlaceholdersFromPost, assembleRemovalReason, submitPostReply, startSingletonJob, isCustomDateformat, getTimeDeltaInSeconds} from "devvit-helpers";
+import {getLocaleFromString, hasPerformedActions, isContributor, isModerator, getRecommendedPlaceholdersFromPost, assembleRemovalReason, submitPostReply, startSingletonJob, isCustomDateformat, getTimeDeltaInSeconds, validatePositiveNumber, isValidDate, safeFormatInTimeZone, Placeholder} from "devvit-helpers";
 import {enUS} from "date-fns/locale";
 
 export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: TriggerContext) {
@@ -30,21 +30,24 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
      */
     console.log(`getting app settings for ${subredditName}`);
 
-    const removalReasonId = await context.settings.get<string>("removalReasonId");
-    const removalComment = await context.settings.get<string>("removalComment");
+    const removalReasonId = (await context.settings.get<string>("removalReasonId"))?.trim();
+    const removalComment = (await context.settings.get<string>("removalComment"))?.trim();
 
     // These should never be undefined, but default to the safer option of true if they somehow are.
     const ignoreModerators = await context.settings.get<boolean>("ignoreModerators") ?? true;
     const ignoreContributors = await context.settings.get<boolean>("ignoreContributors") ?? true;
 
+    // ignoreAutoRemoved is effectively true if ignoreRemoved is true, so we'll need to check both.
+    const ignoreAutoRemoved = (await context.settings.get<boolean>("ignoreAutoRemoved") ?? true) || (await context.settings.get<boolean>("ignoreRemoved") ?? false);
+
     let removalFlair: SetFlairOptions | undefined = {
         subredditName,
-        text: await context.settings.get<string>("removalFlairText"),
-        cssClass: await context.settings.get<string>("removalFlairCssClass"),
-        flairTemplateId: await context.settings.get<string>("removalFlairTemplateId"),
+        text: (await context.settings.get<string>("removalFlairText"))?.trim(),
+        cssClass: (await context.settings.get<string>("removalFlairCssClass"))?.trim(),
+        flairTemplateId: (await context.settings.get<string>("removalFlairTemplateId"))?.trim(),
     };
     // No removal flair if all fields are undefined or empty. Also trim whitespace from the fields to account for accidentally enter whitespaces.
-    if (!removalFlair.text?.trim() && !removalFlair.cssClass?.trim() && !removalFlair.flairTemplateId?.trim()) {
+    if (!removalFlair.text && !removalFlair.cssClass && !removalFlair.flairTemplateId) {
         removalFlair = undefined;
     }
 
@@ -88,37 +91,95 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
 
     // Clear old posts by the author and get the posts by the author in the quota period at the same time.
     const postsByAuthor = await clearOldPostsByAuthor(context.kvStore, authorId, quotaPeriod);
-    console.log(`postsByAuthor ${authorId}: ${JSON.stringify(postsByAuthor)}`);
 
     // Don't count the current post towards the quota.
     if (postId in postsByAuthor) {
         Reflect.deleteProperty(postsByAuthor, postId);
     }
+    console.log(`postsByAuthor ${authorId}: ${JSON.stringify(postsByAuthor)}`);
 
+    const numPostsByAuthor = Object.keys(postsByAuthor).length;
     // Check if the author has exceeded their quota.
-    if (Object.keys(postsByAuthor).length >= quotaAmount) {
+    if (numPostsByAuthor >= quotaAmount) {
         // Do the removal first, then do removal reason stuff.
-        console.log(`removing post ${postId} for user ${authorId} due to quota`);
+        console.log(`removing post ${postId} for user ${authorId}; ${numPostsByAuthor} already posted, another would exceed ${quotaAmount}`);
         await context.reddit.remove(postId, false).catch(e => console.error(`Post removal failed for ${postId}`, e));
 
-        const placeholders = removalComment?.trim() || removalFlair ? await getRecommendedPlaceholdersFromPost(post, customDateformat) : [];
+        let placeholders: Placeholder[] = [];
+        let extraPlaceholders: Record<string, string> = {};
 
-        if (removalReasonId?.trim()) {
+        // Only populate placeholders and extraPlaceholders if there is a removal comment or removal flair.
+        if (removalComment || removalFlair) {
+            placeholders = await getRecommendedPlaceholdersFromPost(post, customDateformat);
+            extraPlaceholders = {
+                "{{author_flair_template_id}}": event.post?.authorFlair?.text ?? "",
+                "{{quota_amount}}": quotaAmount.toString(),
+                "{{quota_period}}": quotaPeriod.toString(),
+                "{{quota_next_unix}}": "",
+                "{{quota_next_iso}}": "",
+                "{{quota_next_custom}}": "",
+                "{{mod}}": (await context.reddit.getAppUser()).username,
+            };
+
+            // Calculate when the quota will have another slot open. That is the oldest post + quota period.
+            let quotaOldestPost = Date.now();
+            if (numPostsByAuthor === quotaAmount && ignoreAutoRemoved) {
+                // If the stored posts is equal to the maximum, the oldest post will free up a slot.
+                quotaOldestPost = Math.min(Date.now(), ...Object.values(postsByAuthor));
+            } else if (numPostsByAuthor >= quotaAmount) {
+                /* The oldest post will only free up a slot if we're ignoring auto-removed posts and the number of stored posts is equal to the maximum.
+                 * We'll need to find the oldest post that will free up a slot.
+                 * That should be the post at the nth from the end in a sorted list (where n is the quota amount).
+                 */
+                const sortedPosts = Object.values(postsByAuthor).sort((a, b) => a - b);
+
+                /* If we're not ignoring auto-removed posts, that means the current post will also count towards the quota.
+                 * The current post was removed from postsByAuthor earlier, so we'd need to find the nth+1 from the end instead.
+                 * We can do that by casting !ignoreAutoRemoved to a number, which will be 0 if true and 1 if false.
+                 *
+                 * Couple of examples:
+                 *
+                 * quotaAmount = 3, ignoreAutoRemoved = true, sortedPosts.length = 5
+                 * Here we'd want the 3rd post from the end, meaning the one at index 5-3+0=2
+                 *
+                 * quotaAmount = 3, ignoreAutoRemoved = false, sortedPosts.length = 5
+                 * Here we'd want the 3rd post from the end, but the end is missing the current post,
+                 * so it works out to the 2nd post from the end at index 5-3+1=3
+                 *
+                 * quotaAmount = 2, ignoreAutoRemoved = false, sortedPosts.length = 2
+                 * Here we'd normally want the oldest post, but since we're not ignoring auto-removed posts,
+                 * we'll need to count the current one and actually want the 2nd oldest post, so index 2-2+1=1.
+                 */
+                quotaOldestPost = sortedPosts[sortedPosts.length - quotaAmount + Number(!ignoreAutoRemoved)];
+            }
+
+            // Check that we didn't somehow get an invalid timestamp. We can repurpose the validatePositiveNumber function for this.
+            if (typeof await validatePositiveNumber({value: quotaOldestPost, isEditing: false}) === "undefined") {
+                // quotaNext is the date when the quota will have another slot open, which is the oldest post + quota period.
+                const quotaNext = new Date(quotaOldestPost + quotaPeriod * 60 * 60 * 1000);
+                if (isValidDate(quotaNext)) {
+                    console.log(`quotaOldestPost for ${authorId} ${quotaOldestPost} and quotaNext ${quotaNext.getTime()}`);
+                    extraPlaceholders["{{quota_next_unix}}"] = Math.floor(quotaNext.getTime() / 1000).toString();
+                    extraPlaceholders["{{quota_next_iso}}"] = quotaNext.toISOString();
+                    extraPlaceholders["{{quota_next_custom}}"] = safeFormatInTimeZone(quotaNext, customDateformat);
+                }
+            } else {
+                console.error(`Invalid quotaOldestPost (${quotaOldestPost}) in onPostCreate`);
+            }
+        }
+
+        if (removalReasonId) {
             console.log(`submitting removal reason ${removalReasonId} for post ${postId}`);
-            await context.reddit.addRemovalNote({itemIds: [postId], reasonId: removalReasonId, modNote: "Quote Exceeded"})
+            await context.reddit.addRemovalNote({itemIds: [postId], reasonId: removalReasonId, modNote: "Quota Exceeded"})
                 .catch(e => console.error(`Removal reason submission failed for ${postId}`, e));
-        } else if (removalComment?.trim()) {
+        }
+
+        if (removalComment) {
             console.log(`submitting removal comment for post ${postId}`);
             const removalCommentText = assembleRemovalReason(
                 {body: removalComment},
                 placeholders,
-                {
-                    "{{author_flair_text}}": event.post?.authorFlair?.text ?? "",
-                    "{{author_flair_css_class}}": event.post?.authorFlair?.text ?? "",
-                    "{{author_flair_template_id}}": event.post?.authorFlair?.text ?? "",
-                    "{{quota_amount}}": quotaAmount.toString(),
-                    "{{quota_period}}": quotaPeriod.toString(),
-                }
+                extraPlaceholders
             );
             await submitPostReply(context.reddit, postId, removalCommentText, true, true)
                 .catch(e => console.error(`Removal comment submission failed for ${postId}`, e));
@@ -131,23 +192,19 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
                 removalFlairText = assembleRemovalReason(
                     {body: removalFlairText},
                     placeholders,
-                    {
-                        "{{author_flair_text}}": event.post?.authorFlair?.text ?? "",
-                        "{{author_flair_css_class}}": event.post?.authorFlair?.text ?? "",
-                        "{{author_flair_template_id}}": event.post?.authorFlair?.text ?? "",
-                        "{{quota_amount}}": quotaAmount.toString(),
-                        "{{quota_period}}": quotaPeriod.toString(),
-                    }
+                    extraPlaceholders
                 );
             }
             await context.reddit.setPostFlair({
                 postId,
                 subredditName,
-                text: removalFlairText,
-                cssClass: removalFlair.cssClass,
-                flairTemplateId: removalFlair.flairTemplateId,
+                text: removalFlairText ? removalFlairText : undefined,
+                cssClass: removalFlair.cssClass ? removalFlair.cssClass : undefined,
+                flairTemplateId: removalFlair.flairTemplateId ? removalFlair.flairTemplateId : undefined,
             });
         }
+    } else {
+        console.log(`User has not exceeded quota, ${numPostsByAuthor} posts out of ${quotaAmount} in ${quotaPeriod} hours`);
     }
 
     // Ignore posts that have already been actioned.
@@ -155,6 +212,8 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
 }
 
 export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: TriggerContext) {
+    console.log(`running onPostSubmit for ${event.post?.id ?? ""}`);
+
     const authorId = event.author?.id;
     const postId = event.post?.id;
     const createdAt = event.post?.createdAt;
@@ -167,6 +226,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
 }
 
 export async function onPostDelete (event: OnTriggerEvent<PostDelete>, context: TriggerContext) {
+    console.log(`running onPostDelete for ${event.author?.id ?? ""}`);
     const ignoreDeleted = await context.settings.get<boolean>("ignoreDeleted");
     if (!ignoreDeleted) {
         return;
@@ -181,6 +241,7 @@ export async function onPostDelete (event: OnTriggerEvent<PostDelete>, context: 
     // There's no need to check the post if it's not in the kvStore.
     const postsByAuthor = await getPostsByAuthor(context.kvStore, authorId);
     if (!(event.postId in postsByAuthor)) {
+        console.log(`Post ${event.postId} does not exist in kvStore for user ${authorId} in onPostDelete`);
         return;
     }
 
@@ -188,6 +249,7 @@ export async function onPostDelete (event: OnTriggerEvent<PostDelete>, context: 
     // If ignoreRemoved or ignoreAutoRemoved were true, it would've already been removed from the kvStore.
     const post = await context.reddit.getPostById(event.postId);
     if (post.isRemoved() || post.isSpam()) {
+        console.log(`${event.postId} was deleted after being removed, not removing from kvStore in onPostDelete`);
         return;
     }
 
@@ -196,8 +258,9 @@ export async function onPostDelete (event: OnTriggerEvent<PostDelete>, context: 
 }
 
 export async function onPostRemove (event: OnTriggerEvent<ModAction>, context: TriggerContext) {
+    console.log(`running onPostRemove for ${event.targetPost?.id ?? ""}`);
     if (event.action !== "removelink" && event.action !== "spamlink") {
-        return;
+        throw new Error(`Invalid action ${event.action ?? ""} in onPostRemove`);
     }
 
     const postId = event.targetPost?.id;
@@ -233,8 +296,9 @@ export async function onPostRemove (event: OnTriggerEvent<ModAction>, context: T
 }
 
 export async function onPostApprove (event: OnTriggerEvent<ModAction>, context: TriggerContext) {
+    console.log(`running onPostApprove for ${event.targetPost?.id ?? ""}`);
     if (event.action !== "approvelink") {
-        return;
+        throw new Error(`Invalid action ${event.action ?? ""} in onPostApprove`);
     }
 
     const postId = event.targetPost?.id;
@@ -261,7 +325,7 @@ export async function onPostApprove (event: OnTriggerEvent<ModAction>, context: 
         return;
     }
 
-    console.log(`Redding post ${postId} to kvStore in onPostApprove`);
+    console.log(`Readding post ${postId} to kvStore in onPostApprove`);
     await addPostToKvStore(context.kvStore, authorId, postId, createdAt).catch(e => console.error("addPostToKvStore failed in onPostApprove", e));
 }
 

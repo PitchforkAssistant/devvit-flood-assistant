@@ -1,6 +1,6 @@
 import {Devvit} from "@devvit/public-api";
 import {onAppChanged, onModAction, onPostCreate, onPostDelete, onPostSubmit} from "./handlers/events.js";
-import {LABELS, HELP_TEXT, DEFAULTS} from "./constants.js";
+import {LABELS, HELP_TEXT, DEFAULTS, ERRORS} from "./constants.js";
 import {validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
 import {onRunClearOldPosts} from "./handlers/scheduler.js";
 
@@ -64,7 +64,14 @@ Devvit.addSettings([
                 defaultValue: DEFAULTS.QUOTA_PERIOD,
                 label: LABELS.QUOTA_PERIOD,
                 helpText: HELP_TEXT.QUOTA_PERIOD,
-                onValidate: validatePositiveNumber,
+                onValidate: async (event, context) => {
+                    const validatePositiveNumberFailed = await validatePositiveNumber(event, context);
+                    if (validatePositiveNumberFailed) {
+                        return validatePositiveNumberFailed;
+                    } else if (Number(event.value) > 168) {
+                        return ERRORS.QUOTA_PERIOD_TOO_LARGE;
+                    }
+                },
             },
             {
                 type: "boolean",

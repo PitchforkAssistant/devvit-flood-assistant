@@ -26,18 +26,6 @@ If a user posts more than this number of posts in the configured period, they wi
 
 This is the time period in which the quota period is enforced. This field is a number of hours. The hours can be fractional, for example `0.5` is 30 minutes. The maximum is `168` hours (7 days).
 
-### Ignore Auto-Removed Posts
-
-If this is enabled, posts that are removed as soon as they are posted will not count towards the quota. This also means that posts that are removed for exceeding the quota will not further add to the quota.
-
-If this is disabled, all posts will count towards the quota, even if they are removed as soon as they are posted for any reason.
-
-Please note that posts that are either later deleted by the author or removed by a moderator will always count towards the quota.
-
-## Removal Settings
-
-These settings let you ignore certain users and configure a removal reason.
-
 ### Ignore Moderators
 
 If this is enabled, moderators of your subreddit will be ignored by this app.
@@ -46,14 +34,62 @@ If this is enabled, moderators of your subreddit will be ignored by this app.
 
 If this is enabled, users that have been added to the approved submitters list on your subreddit will be ignored by this app.
 
-### Removal Reason
+### Ignore Auto-Removed Posts
+
+If this is enabled, posts that are removed within 60 seconds of posting will not count towards the quota. This also means that posts that are removed for exceeding the quota will not further add to the quota.
+
+If this is disabled, all posts will count towards the quota, even if they are removed as soon as they are posted for any reason.
+
+### Ignore Removed Posts
+
+If this is enabled, posts that are removed by moderators will not count towards the quota. This also effectively enables the "Ignore Auto-Removed Posts" setting.
+
+Posts are readded to the quota if they are approved after being removed and still fall within the quota period.
+
+### Ignore Deleted Posts
+
+If this is enabled, posts that are deleted by the author will not count towards the quota.
+
+If "Ignore Removed Posts" is disabled, posts that are removed by moderators and later deleted by the author will still count towards the quota.
+
+## Removal Settings
+
+These settings let you configure what happens after a post is removed for exceeding the quota.
+
+### Removal Reason ID
+
+If your subreddit uses native removal reasons and you would like the app to use one of them, you can provide the ID of the removal reason here. If you leave this field blank, the app will not apply a native removal reason.
+
+You can find the IDs of your subreddit's removal reasons by using the [Show Removal Reason IDs](https://developers.reddit.com/r/PitchforkAssistant/apps/removalreasonids) Devvit app or by fetching them using the `https://oauth.reddit.com/api/v1/subreddit/removal_reasons.json` endpoint.
+
+Please note that this is only visible to moderators. Devvit does not currently send a removal message to the author when a native removal reason is applied. If you would like to add a user-visible removal reason, you will need to use the [Removal Comment](#wiki_removal_comment) or [Removal Flair](#wiki_removal_flair) fields instead.
+
+### Removal Comment
 
 This is left as a stickied comment on threads that are removed for flooding. If you leave this field blank, no comment will be left. 
 
 This field supports [placeholders](#wiki_placeholders).
 
+### Removal Flair
 
-## Placeholders
+These settings configure the flair that is applied to posts that are removed for flooding. At least one is required, if you leave all three fields blank, no flair will be applied.
+
+#### Removal Flair Text
+
+This is the text that is displayed on the flair. This field supports [placeholders](#wiki_placeholders).
+
+#### Removal Flair CSS Class
+
+This is the CSS class that is applied to the flair.
+
+#### Removal Flair Template ID
+
+This is the ID of the flair template that is applied to the post. A templateId should look something like this: `099e12cb-6da5-4c9b-831d-7316dd18a3d6`.
+
+The easiest way to find a post flair template ID is to go to Mod Tools -> Post Flair on new Reddit and click on copy ID.
+
+
+### Placeholders
 
 Placeholders are keywords surrounded by double curly brackets, they are case-sensitive. Placeholders are replaced with their values when an action is performed. 
 
@@ -63,46 +99,47 @@ Any placeholders that are not applicable to the post are replaced with an empty 
 
 Below is a list of all supported placeholders:
 
-| Placeholder                    | Description                                                                                                     |
-| :----------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `{{quota_amount}}`             | Currently configured [Quota Amount](#wiki_quota_amount)                                                         |
-| `{{quota_period}}`             | Currently configured [Quota Period](#wiki_quota_period)                                                         |
-| `{{author}}`                   | Username of the author                                                                                          |
-| `{{subreddit}}`                | Display name of the subreddit                                                                                   |
-| `{{body}}`                     | Post's body (*not recommended*)                                                                                 |
-| `{{title}}`                    | Title of the post                                                                                               |
-| `{{kind}}`                     | Type of the post, always "submission"                                                                           |
-| `{{permalink}}`                | Permalink to the post                                                                                           |
-| `{{url}}`                      | Alias for `{{permalink}}`                                                                                       |
-| `{{link}}`                     | The URL that the post links to, `{{permalink}}` for text posts                                                  |
-| `{{domain}}`                   | The domain that the post links to, blank for text posts                                                         |
-| `{{id}}`                       | Post ID                                                                                                         |
-| `{{author_id}}`                | Author's User ID                                                                                                |
-| `{{subreddit_id}}`             | Subreddit's ID                                                                                                  |
-| `{{mod}}`                      | Username of the mod that set the flair                                                                          |
-| `{{author_flair_text}}`        | Text of the post author's user flair                                                                            |
-| `{{author_flair_css_class}}`   | CSS class of the post author's user flair                                                                       |
-| `{{author_flair_template_id}}` | Template ID of the post author's user flair                                                                     |
-| `{{link_flair_text}}`          | Text of the post's flair                                                                                        |
-| `{{link_flair_css_class}}`     | CSS class of the post's flair                                                                                   |
-| `{{link_flair_template_id}}`   | Template ID of the post's flair                                                                                 |
-| `{{time_iso}}`                 | Current time in the ISO 8601 format                                                                             |
-| `{{time_unix}}`                | Current time as the unix epoch in seconds                                                                       |
-| `{{time_custom}}`              | Current time as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options)         |
-| `{{created_iso}}`              | Post's creation time in the ISO 8601                                                                            |
-| `{{created_unix}}`             | Post's creation time as the unix epoch in seconds                                                               |
-| `{{created_custom}}`           | Post's creation time as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options) |
-| `{{actioned_iso}}`             | Same as {{time_iso}}                                                                                            |
-| `{{actioned_unix}}`            | Same as {{time_unix}}                                                                                           |
-| `{{actioned_custom}}`          | Same as {{actioned_custom}}                                                                                     |
+| Placeholder                    | Description                                                                                                                        |
+| :----------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| `{{quota_amount}}`             | Currently configured [Quota Amount](#wiki_quota_amount)                                                                            |
+| `{{quota_period}}`             | Currently configured [Quota Period](#wiki_quota_period)                                                                            |
+| `{{quota_next_iso}}`           | When the user will be able to post next in the ISO 8601 format                                                                     |
+| `{{quota_next_unix}}`          | When the user will be able to post next as the unix epoch in seconds                                                               |
+| `{{quota_next_custom}}`        | When the user will be able to post next as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options) |
+| `{{author}}`                   | Username of the author                                                                                                             |
+| `{{subreddit}}`                | Display name of the subreddit                                                                                                      |
+| `{{body}}`                     | Post's body (*not recommended*)                                                                                                    |
+| `{{title}}`                    | Title of the post                                                                                                                  |
+| `{{kind}}`                     | Type of the post, always "submission"                                                                                              |
+| `{{permalink}}`                | Permalink to the post                                                                                                              |
+| `{{url}}`                      | Alias for `{{permalink}}`                                                                                                          |
+| `{{link}}`                     | The URL that the post links to, `{{permalink}}` for text posts                                                                     |
+| `{{domain}}`                   | The domain that the post links to, blank for text posts                                                                            |
+| `{{id}}`                       | Post ID                                                                                                                            |
+| `{{author_id}}`                | Author's User ID                                                                                                                   |
+| `{{subreddit_id}}`             | Subreddit's ID                                                                                                                     |
+| `{{mod}}`                      | Username of the mod that set the flair                                                                                             |
+| `{{author_flair_text}}`        | Text of the post author's user flair                                                                                               |
+| `{{author_flair_css_class}}`   | CSS class of the post author's user flair                                                                                          |
+| `{{author_flair_template_id}}` | Template ID of the post author's user flair                                                                                        |
+| `{{link_flair_text}}`          | Text of the post's flair                                                                                                           |
+| `{{link_flair_css_class}}`     | CSS class of the post's flair                                                                                                      |
+| `{{link_flair_template_id}}`   | Template ID of the post's flair                                                                                                    |
+| `{{time_iso}}`                 | Current time in the ISO 8601 format                                                                                                |
+| `{{time_unix}}`                | Current time as the unix epoch in seconds                                                                                          |
+| `{{time_custom}}`              | Current time as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options)                            |
+| `{{created_iso}}`              | Post's creation time in the ISO 8601 format                                                                                        |
+| `{{created_unix}}`             | Post's creation time as the unix epoch in seconds                                                                                  |
+| `{{created_custom}}`           | Post's creation time as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options)                    |
+
 
 ### Custom Date Placeholder Options
 
-These settings are used with used for `{{created_custom}}`, `{{actioned_custom}}`, and `{{time_custom}}` placeholders. If your removal reason doesn't contain any of them, you can completely ignore these options.
+These settings are used with used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. If your removal reason doesn't contain any of them, you can completely ignore these options.
 
 #### Date Format Template
 
-This date template is used for `{{created_custom}}`, `{{actioned_custom}}`, and `{{time_custom}}` placeholders. The application uses date-fns to format custom dates, the patterns for these are different from the Python timeformat Flair_Helper used. It uses the date formatting specified in the Unicode Technical Standard #35 with a few extra options, [view a full list of patterns supported by date-fns](https://date-fns.org/v2.30.0/docs/format). The default value is `yyyy-MM-dd HH-mm-ss`, below is a list of some common patterns:
+This date template is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. The application uses date-fns to format custom dates, the patterns for these are different from the Python timeformat Flair_Helper used. It uses the date formatting specified in the Unicode Technical Standard #35 with a few extra options, [view a full list of patterns supported by date-fns](https://date-fns.org/v2.30.0/docs/format). The default value is `yyyy-MM-dd HH-mm-ss`, below is a list of some common patterns:
 
 
 | Name   | Pattern(s)          | Example(s)           |
@@ -117,11 +154,11 @@ This date template is used for `{{created_custom}}`, `{{actioned_custom}}`, and 
 
 #### Timezone
 
-This is the timezone used for `{{created_custom}}`, `{{actioned_custom}}`, and `{{time_custom}}` placeholders. The default value is `UTC`. This field can accept both timezone identifiers and offsets. [View a full list of supported timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) or simply provide it in the format `+HH:mm` or `-HH:mm` (ie. `+05:30` or `-08:00`).
+This is the timezone used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. The default value is `UTC`. This field can accept both timezone identifiers and offsets. [View a full list of supported timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) or simply provide it in the format `+HH:mm` or `-HH:mm` (ie. `+05:30` or `-08:00`).
 
 #### Locale
 
-This field is used for `{{created_custom}}`, `{{actioned_custom}}`, and `{{time_custom}}` placeholders. It affects locale specific values such as the first day of the week, month names, abbrivations, etc. The default value is `enUS`. Below is a table of all supported locales:
+This field is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. It affects locale specific values such as the first day of the week, month names, abbrivations, etc. The default value is `enUS`. Below is a table of all supported locales:
 
 | Name                      | Value      |
 | :------------------------ | :--------- |

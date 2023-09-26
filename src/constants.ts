@@ -15,7 +15,7 @@ export const LABELS = {
     IGNORE_DELETED: "Ignore Deleted Posts",
     REMOVAL_SETTINGS: "Removal Settings",
     REMOVAL_REASON_ID: "Removal Reason ID",
-    REMOVAL_COMMENT: "Removal Reason",
+    REMOVAL_COMMENT: "Removal Comment",
     REMOVAL_FLAIR_SETTINGS: "Removal Flair",
     REMOVAL_FLAIR_TEXT: "Removal Flair Text",
     REMOVAL_FLAIR_CSS: "Removal Flair CSS Class",
@@ -37,13 +37,13 @@ export const HELP_TEXT = {
     IGNORE_REMOVED: "If this setting is enabled, any posts that are removed by moderators will not count towards the quota for future posts.",
     IGNORE_DELETED: "If this setting is enabled, any posts that are deleted by the author will not count towards the quota for future posts.",
     REMOVAL_SETTINGS: "These settings let you ignore certain users and configure a removal reason.",
-    REMOVAL_REASON_ID: "If you have a native removal reason set up on your subreddit, you can enter the ID here to automatically remove posts with that reason. Leave blank to use the removal comment below instead.",
+    REMOVAL_REASON_ID: "If you have a native removal reason you'd wish to apply to removed posts, you can enter its ID here. Please note that Devvit doesn't currently send the corresponding removal reason to the user, so this is only visible to mods.",
     REMOVAL_COMMENT: "This is left as a stickied comment on posts that are removed for exceeding the quota. Leave blank to remove silently. Placeholders are supported.",
     REMOVAL_FLAIR_SETTINGS: "These settings let you add a flair to posts that are removed for exceeding the quota. If all are left blank, no flair will be added.",
     REMOVAL_FLAIR_TEXT: "Text to display on the removal flair. Placeholders are supported.",
     REMOVAL_FLAIR_CSS: "CSS class to apply to the removal flair.",
     REMOVAL_FLAIR_ID: "Template ID of the removal flair.",
-    CUSTOM_DATE_SETTINGS: "These settings let you customize the {{time_custom}} placeholders. If your removal reason doesn't use this placeholder, you can completely ignore these settings.",
+    CUSTOM_DATE_SETTINGS: "These settings let you customize the {{time_custom}} placeholders. If your removal reason doesn't use a custom time placeholder, you can completely ignore these settings.",
     CUSTOM_DATE_TEMPLATE: `This is used by date-fns to format {{time_custom}}. See: ${LINKS.TIMEFORMAT}`,
     CUSTOM_TIMEZONE: "Timezone used for {{time_custom}}, must be a UTC offset or TZ identifier (e.g. UTC, +02:00, America/New_York, etc).",
     CUSTOM_LOCALE: "Locale used by {{time_custom}} (e.g. enUS, de, etc).",
@@ -62,4 +62,8 @@ export const DEFAULTS = {
     CUSTOM_DATE_TEMPLATE: "yyyy-MM-dd hh-mm-ss",
     CUSTOM_TIMEZONE: "UTC",
     CUSTOM_LOCALE: "enUS",
+};
+
+export const ERRORS = {
+    QUOTA_PERIOD_TOO_LARGE: "Please do not set the quota period to more than 168 hours (7 days). The amount of posts that can be stored in the app storage is limited.",
 };
