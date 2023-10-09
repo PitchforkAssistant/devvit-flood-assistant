@@ -36,7 +36,7 @@ export const HELP_TEXT = {
     IGNORE_AUTO_REMOVED: "If this setting is enabled, posts that are immediately removed after posting will not count towards the quota for future posts.",
     IGNORE_REMOVED: "If this setting is enabled, any posts that are removed by moderators will not count towards the quota for future posts.",
     IGNORE_DELETED: "If this setting is enabled, any posts that are deleted by the author will not count towards the quota for future posts.",
-    REMOVAL_SETTINGS: "These settings let you ignore certain users and configure a removal reason.",
+    REMOVAL_SETTINGS: "These settings let you configure a removal reason.",
     REMOVAL_REASON_ID: "If you have a native removal reason you'd wish to apply to removed posts, you can enter its ID here. Please note that Devvit doesn't currently send the corresponding removal reason to the user, so this is only visible to mods.",
     REMOVAL_COMMENT: "This is left as a stickied comment on posts that are removed for exceeding the quota. Leave blank to remove silently. Placeholders are supported.",
     REMOVAL_FLAIR_SETTINGS: "These settings let you add a flair to posts that are removed for exceeding the quota. If all are left blank, no flair will be added.",
