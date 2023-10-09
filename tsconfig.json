@@ -2,5 +2,7 @@
     "extends": "@devvit/tsconfig/devvit.tsconfig.json",
     "compilerOptions": {
         "resolveJsonModule": true,
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
     }
 }
