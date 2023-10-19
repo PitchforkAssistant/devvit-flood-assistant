@@ -85,7 +85,7 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     const hasRemoveActioned = await hasPerformedActions(context.reddit, subredditName, postId, ["removelink", "spamlink"]);
     const post = await context.reddit.getPostById(postId);
     if (hasRemoveActioned || post.isRemoved() || post.isSpam()) {
-        console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()})`);
+        console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()}, isSpam: ${post.isSpam().toString()})`);
         return;
     }
 
@@ -230,7 +230,7 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
         const hasRemoveActioned = await hasPerformedActions(context.reddit, subredditName, postId, ["removelink", "spamlink"]);
         const post = await context.reddit.getPostById(postId);
         if (hasRemoveActioned || post.isRemoved() || post.isSpam()) {
-            console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()})`);
+            console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()}, isSpam: ${post.isSpam().toString()})`);
             return;
         }
     }
