@@ -84,7 +84,7 @@ export async function onPostCreate (event: OnTriggerEvent<PostCreate>, context: 
     // Check if the post has already been actioned.
     const hasRemoveActioned = await hasPerformedActions(context.reddit, subredditName, postId, ["removelink", "spamlink"]);
     const post = await context.reddit.getPostById(postId);
-    if (hasRemoveActioned || post.isRemoved()) {
+    if (hasRemoveActioned || post.isRemoved() || post.isSpam()) {
         console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()})`);
         return;
     }
@@ -217,8 +217,22 @@ export async function onPostSubmit (event: OnTriggerEvent<PostSubmit>, context: 
     const authorId = event.author?.id;
     const postId = event.post?.id;
     const createdAt = event.post?.createdAt;
-    if (!authorId || !postId || !createdAt) {
-        throw new Error(`Missing authorId (${authorId ?? ""}), postId (${postId ?? ""}), or createdAt (${createdAt ?? ""}) in onPostSubmit`);
+    const subredditName = event.subreddit?.name;
+    if (!authorId || !postId || !createdAt || !subredditName) {
+        throw new Error(`Missing authorId (${authorId ?? ""}), postId (${postId ?? ""}), createdAt (${createdAt ?? ""}), or subredditName (${subredditName ?? ""}) in onPostSubmit`);
+    }
+
+    const ignoreRemovedSettingsPromises = [context.settings.get<boolean>("ignoreAutoRemoved"), context.settings.get<boolean>("ignoreRemoved")];
+    const ignoreRemovedSettings = await Promise.all(ignoreRemovedSettingsPromises);
+    if (ignoreRemovedSettings.includes(true)) {
+        // Check if the post has already been actioned. There's a chance that onPostSubmit won't finish adding the post to the kvStore before onPostRemove runs,
+        // meaning auto-removed posts wouldn't be ignored.
+        const hasRemoveActioned = await hasPerformedActions(context.reddit, subredditName, postId, ["removelink", "spamlink"]);
+        const post = await context.reddit.getPostById(postId);
+        if (hasRemoveActioned || post.isRemoved() || post.isSpam()) {
+            console.log(`skipping removed post ${postId} (hasRemoveActioned: ${hasRemoveActioned.toString()}, isRemoved: ${post.isRemoved().toString()})`);
+            return;
+        }
     }
 
     // Log the post to the kvStore no matter what, we can filter it out in onPostCreate based on the settings.
