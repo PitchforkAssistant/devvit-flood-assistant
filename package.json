@@ -10,20 +10,20 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@devvit/protos": "0.10.6",
-    "@devvit/public-api": "0.10.6",
-    "@devvit/shared-types": "0.10.6",
+    "@devvit/protos": "0.10.9",
+    "@devvit/public-api": "0.10.9",
+    "@devvit/shared-types": "0.10.9",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
-    "devvit-helpers": "0.2.23"
+    "devvit-helpers": "0.2.25"
   },
   "devDependencies": {
-    "@devvit/tsconfig": "0.10.6",
-    "@typescript-eslint/eslint-plugin": "^6.7.5",
-    "@typescript-eslint/parser": "^6.7.5",
-    "eslint": "^8.51.0",
-    "eslint-plugin-vitest": "^0.3.2",
-    "typescript": "^5.2.2",
-    "vitest": "^0.34.6"
+    "@devvit/tsconfig": "0.10.9",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "eslint": "^8.53.0",
+    "eslint-plugin-vitest": "^0.3.9",
+    "typescript": "5.2.2",
+    "vitest": "0.34.6"
   }
 }
