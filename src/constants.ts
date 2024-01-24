@@ -61,7 +61,7 @@ export const DEFAULTS = {
     REMOVAL_COMMENT: "Hi /u/{{author}}! Thanks for posting to /r/{{subreddit}}. Unfortunately, [your {{kind}}]({{permalink}}) was removed for the following reason:\n\n* Please do not flood the subreddit with posts. You may only submit {{quota_amount}} posts within a {{quota_period}} hour period. Please wait a while and try again!\n\nIf you have questions about this, please [contact our mods via moderator mail](https://www.reddit.com/message/compose?to=/r/{{subreddit}}) rather than replying here. Thank you!",
     CUSTOM_DATE_TEMPLATE: "yyyy-MM-dd hh-mm-ss",
     CUSTOM_TIMEZONE: "UTC",
-    CUSTOM_LOCALE: "enUS",
+    CUSTOM_LOCALE: ["enUS"],
 };
 
 export const ERRORS = {

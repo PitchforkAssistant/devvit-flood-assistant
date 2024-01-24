@@ -1,7 +1,7 @@
 import {Devvit} from "@devvit/public-api";
 import {onAppChanged, onModAction, onPostCreate, onPostDelete, onPostSubmit} from "./handlers/events.js";
 import {LABELS, HELP_TEXT, DEFAULTS, ERRORS} from "./constants.js";
-import {validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
+import {LOCALE_OPTIONS, validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
 import {onRunClearOldPosts} from "./handlers/scheduler.js";
 
 Devvit.configure({
@@ -175,11 +175,12 @@ Devvit.addSettings([
                         onValidate: validateCustomTimezone,
                     },
                     {
-                        type: "string",
+                        type: "select",
                         name: "customLocale",
                         defaultValue: DEFAULTS.CUSTOM_LOCALE,
                         label: LABELS.CUSTOM_LOCALE,
-                        helpText: HELP_TEXT.CUSTOM_LOCALE,
+                        options: LOCALE_OPTIONS,
+                        multiSelect: false,
                         onValidate: validateCustomLocale,
                     },
                 ],
