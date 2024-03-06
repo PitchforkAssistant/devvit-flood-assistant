@@ -172,7 +172,7 @@ export class FloodingEvaluator {
         const includedPosts = (await Promise.all(includedPostPromises)).filter(Boolean) as Post[];
 
         // sort post from newest to oldest
-        includedPosts.sort((postA, postB) => trackedPosts[postA.id].getTime() - trackedPosts[postB.id].getTime());
+        includedPosts.sort((postA, postB) => trackedPosts[postB.id].getTime() - trackedPosts[postA.id].getTime());
 
         this.cachedIncludedPosts = includedPosts;
         return includedPosts;
@@ -197,8 +197,8 @@ export class FloodingEvaluator {
         }
 
         const includedPosts = await this.getIncludedPosts();
-        if (includedPosts.length === 0) {
-            console.warn(`The posts list for ${this.author.username} is empty, but somehow exceeds quota of ${this.config.quotaAmount}??`);
+        if (includedPosts.length < this.config.quotaAmount || includedPosts.length < 1) {
+            console.warn(`The posts list for ${this.author.username} is ${includedPosts.length} long, but somehow exceeds quota of ${this.config.quotaAmount}??`);
             return this.now;
         }
 
@@ -207,28 +207,28 @@ export class FloodingEvaluator {
            Example 1: List of posts is longer than the quota amount.
             If there are 2 posts allowed and the list of included posts has 5, 4 posts will need to move out of the quota to make room for a new post.
             length = 5
-            quotaAmount = 2
-            freeSpotIndex = 5 - 2 = 3 (4th post in the list of 5, so once it expires, the list will be down to 1, which is less than the quota amount)
+            quotaAmount = 3
+            freeSpotIndex = 0 + quotaAmount - 1 = 2 (3rd newest post in the list of 5, so once it expires, the list will be down to 2)
 
            Example 2: List of posts is equal to the quota amount.
             If there are 2 posts allowed and the list of included posts has 2, 1 posts will need to move out of the quota to make room for a new post.
             length = 2
             quotaAmount = 2
-            freeSpotIndex = 2 - 2 = 0 (1st post in the list of 2, so once it expires, the list will be empty, which is less than the quota amount)
+            freeSpotIndex = 0 + quotaAmount - 1 = 1 (2nd newest post in the list of 2, so once it expires, the list will be down to 1)
 
            Example 3: List of posts is shorter than the quota amount.
             If there are 2 posts allowed and the list of included posts has 1, 0 posts will need to move out of the quota to make room for a new post.
             length = 1
             quotaAmount = 2
-            freeSpotIndex = 1 - 2 = -1 (we'll return the current time, as the list is already below the quota amount)
+            freeSpotIndex = 0 + quotaAmount - 1 = 1 (we'll return the current time, as the list is already below the quota amount)
             This shouldn't happen, but we'll need to check for negative numbers just in case.
         */
-        const freeSpotIndex = includedPosts.length - this.config.quotaAmount;
+        const freeSpotIndex = this.config.quotaAmount - 1;
 
-        if (freeSpotIndex < 0) {
+        if (freeSpotIndex < 0 || freeSpotIndex >= includedPosts.length) {
             return this.now;
         } else {
-            return includedPosts[freeSpotIndex].createdAt;
+            return new Date(includedPosts[freeSpotIndex].createdAt.getTime() + this.config.quotaPeriod * 60 * 60 * 1000);
         }
     }
 
