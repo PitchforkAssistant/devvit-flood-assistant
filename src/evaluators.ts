@@ -56,7 +56,7 @@ export class FloodingEvaluator {
      * @param {Date} createdAt
      * @returns {Promise<boolean>} True if the post counts towards the quota, false otherwise.
      */
-    public async countsTowardQuota (post: Post, createdAt: Date): Promise<boolean> {
+    public async countsTowardQuota (post: Post): Promise<boolean> {
         // The post currently being evaluated never counts towards the quota.
         if (post.id === this.currentPost.id) {
             return false;
@@ -65,7 +65,7 @@ export class FloodingEvaluator {
         // If the post is older than the cutoff, it doesn't count towards the quota.
         // This shouldn't happen, as we're clearing old posts from Redis in getIncludedPosts,
         // but just in case this function is called from elsewhere, we'll check for it.
-        if (createdAt < this.cutoff) {
+        if (post.createdAt < this.cutoff) {
             return false;
         }
 
@@ -129,7 +129,7 @@ export class FloodingEvaluator {
             }
 
             // If the post was removed by AutoModerator, that counts as an auto-removal.
-            if (post.removedBy === "AutoModerator") {
+            if (post.removedBy?.toLowerCase() === "automoderator") {
                 return false;
             }
 
@@ -138,7 +138,7 @@ export class FloodingEvaluator {
             const removeTime = await getActionTime(this.redis, "remove", post.id);
             if (!removeTime) {
                 console.warn(`Post ${post.id} has no removeTime, was it removed without triggering onModAction? Cause: ${post.removedByCategory}`);
-            } else if (removeTime.getTime() - createdAt.getTime() < 60 * 1000) {
+            } else if (removeTime.getTime() - post.createdAt.getTime() < 60 * 1000) {
                 return false;
             }
         }
@@ -165,14 +165,16 @@ export class FloodingEvaluator {
         // We want to get and check all the included posts in parallel.
         // We'll add a promise to fetch every tracked post, once it's fetched we'll only return the post if it counts towards the quota.
         const includedPostPromises: Promise<Post|undefined>[] = [];
-        for (const [postId, createdAt] of Object.entries(trackedPosts)) {
-            includedPostPromises.push(this.reddit.getPostById(postId).then(async post => await this.countsTowardQuota(post, createdAt) ? post : undefined));
+        for (const postId of Object.keys(trackedPosts)) {
+            includedPostPromises.push(this.reddit.getPostById(postId).then(async post => await this.countsTowardQuota(post) ? post : undefined));
         }
         // Posts that weren't included returned undefined, so we'll filter those out.
         const includedPosts = (await Promise.all(includedPostPromises)).filter(Boolean) as Post[];
 
         // sort post from newest to oldest
-        includedPosts.sort((postA, postB) => trackedPosts[postB.id].getTime() - trackedPosts[postA.id].getTime());
+        includedPosts.sort((postA, postB) => postB.createdAt.getTime() - postA.createdAt.getTime());
+
+        console.log(`Posts included in quota for ${this.author.username}: ${includedPosts.map(post => post.id).join(", ")}`);
 
         this.cachedIncludedPosts = includedPosts;
         return includedPosts;
