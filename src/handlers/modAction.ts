@@ -15,11 +15,6 @@ export async function onModAction (event: ModAction, context: TriggerContext) {
         return;
     }
 
-    if (context.appAccountId === event.moderator?.id) {
-        console.log(`Ignoring own removal of post ${postId}`);
-        return;
-    }
-
     if (event.action === "approvelink") {
         await untrackActionTime(context.redis, "remove", postId);
     } else {

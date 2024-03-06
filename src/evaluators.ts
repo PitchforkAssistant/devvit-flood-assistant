@@ -9,6 +9,7 @@ export class FloodingEvaluator {
     public readonly now: Date;
     public readonly cutoff: Date;
     private cachedIncludedPosts: Post[] | undefined;
+    private appAccount: User | undefined;
 
     constructor (
         readonly config: FloodAssistantConfig,
@@ -40,6 +41,13 @@ export class FloodingEvaluator {
 
         const inIgnoredGroups = await Promise.all(inIgnoredGroupPromises);
         return inIgnoredGroups.some(Boolean);
+    }
+
+    public async getAppAccount (): Promise<User> {
+        if (!this.appAccount || !this.useCached) {
+            this.appAccount = await this.reddit.getAppUser();
+        }
+        return this.appAccount;
     }
 
     /**
@@ -76,6 +84,11 @@ export class FloodingEvaluator {
             if (this.config.ignoreRemoved) {
                 return false;
             }
+        }
+
+        // Skip any further checks if the post was removed by this app.
+        if (post.removedBy === (await this.getAppAccount()).username) {
+            return false;
         }
 
         // If the post is deleted and we're ignoring deleted posts, we'll need to check if it was removed before being deleted.
