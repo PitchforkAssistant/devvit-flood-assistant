@@ -127,7 +127,7 @@
             4,
             {
                 "VariableDeclarator": "first",
-                "SwitchCase": 0
+                "SwitchCase": 1
             }
         ],
         "linebreak-style": [

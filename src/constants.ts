@@ -1,3 +1,5 @@
+export const LATEST_VERSION = 0;
+
 // Links
 export const LINKS = {
     TIMEFORMAT: "https://date-fns.org/v2.30.0/docs/format",
@@ -62,8 +64,30 @@ export const DEFAULTS = {
     CUSTOM_DATE_TEMPLATE: "yyyy-MM-dd hh-mm-ss",
     CUSTOM_TIMEZONE: "UTC",
     CUSTOM_LOCALE: ["enUS"],
+    MAX_QUOTA_PERIOD: 168,
 };
 
 export const ERRORS = {
     QUOTA_PERIOD_TOO_LARGE: "Please do not set the quota period to more than 168 hours (7 days). The amount of posts that can be stored in the app storage is limited.",
+};
+
+// Important keys
+export const KEYS = {
+    QUOTA_AMOUNT: "quotaAmount",
+    QUOTA_PERIOD: "quotaPeriod",
+    IGNORE_MODS: "ignoreModerators",
+    IGNORE_MEMBERS: "ignoreContributors",
+    IGNORE_AUTO_REMOVED: "ignoreAutoRemoved",
+    IGNORE_REMOVED: "ignoreRemoved",
+    IGNORE_DELETED: "ignoreDeleted",
+    REMOVAL_REASON_ID: "removalReasonId",
+    REMOVAL_COMMENT: "removalComment",
+    REMOVAL_FLAIR_TEXT: "removalFlairText",
+    REMOVAL_FLAIR_CSS: "removalFlairCss",
+    REMOVAL_FLAIR_ID: "removalFlairId",
+    CUSTOM_DATE_TEMPLATE: "customTimeformat",
+    CUSTOM_TIMEZONE: "customTimezone",
+    CUSTOM_LOCALE: "customLocale",
+    JOB_CLEAR: "clearOldPosts",
+    INSTALL_VERSION: "installedVersion",
 };

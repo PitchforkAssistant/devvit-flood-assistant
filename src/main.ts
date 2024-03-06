@@ -1,14 +1,19 @@
 import {Devvit} from "@devvit/public-api";
-import {onAppChanged, onModAction, onPostCreate, onPostDelete, onPostSubmit} from "./handlers/events.js";
 import {LABELS, HELP_TEXT, DEFAULTS, ERRORS} from "./constants.js";
 import {LOCALE_OPTIONS, validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
+import {onAppChanged} from "./handlers/appChanged.js";
+import {onModAction} from "./handlers/modAction.js";
+import {onPostCreate} from "./handlers/postCreate.js";
+import {onPostSubmit} from "./handlers/postSubmit.js";
 import {onRunClearOldPosts} from "./handlers/scheduler.js";
+import {onPostDelete} from "./handlers/postDelete.js";
 
 Devvit.configure({
-    kvStore: true,
     redditAPI: true,
+    redis: true,
 });
 
+// Clear old posts and associated data
 Devvit.addSchedulerJob({
     name: "clearOldPosts",
     onRun: onRunClearOldPosts,
@@ -26,13 +31,13 @@ Devvit.addTrigger({
     onEvent: onPostSubmit,
 });
 
-// Handle ignoreAutoRemoved and ignoreRemoved options
+// Track mod action timestamps
 Devvit.addTrigger({
     event: "ModAction",
     onEvent: onModAction,
 });
 
-// Handle ignoreDeleted option
+// Track post deletion timestamps
 Devvit.addTrigger({
     event: "PostDelete",
     onEvent: onPostDelete,
