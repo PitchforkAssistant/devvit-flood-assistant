@@ -14,7 +14,7 @@ export async function onRunClearOldPosts (event: ScheduledJobEvent, context: Tri
     console.log("getting stored authors");
     const redisAuthors = await context.redis.hkeys("authors");
 
-    console.log("clearOldPostsByAuthorRedis");
+    console.log("clearOldPostsByAuthor");
     redisAuthors.forEach(key => void clearOldPostsByAuthor(context.redis, key, oldestAllowed)
         .catch(e => console.error(`clearOldPostsByAuthor ${key} failed in onRunClearOldPosts`, e)));
 

@@ -57,7 +57,7 @@ export async function untrackPost (redis: RedisClient, authorId: string, postId:
  * @returns {Record<string, Date>} A record of post IDs and their corresponding creation Dates.
  */
 export async function getPostsByAuthor (redis: RedisClient, authorId: string): Promise<Record<string, Date>> {
-    const posts = await redis.zRange(`posts:${authorId}`, 0, -1, {by: "lex"});
+    const posts = await redis.zRange(`posts:${authorId}`, -Infinity, Infinity, {by: "score"});
     return posts.reduce((acc: Record<string, Date>, post) => {
         acc[post.member] = new Date(post.score);
         return acc;

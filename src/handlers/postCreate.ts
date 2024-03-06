@@ -18,13 +18,16 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
     const author = await context.reddit.getUserById(authorId);
     const post = await context.reddit.getPostById(postId);
 
+    console.log("Creating FloodingEvaluator");
     const evaluator = new FloodingEvaluator(config, context.reddit, context.redis, subreddit, author, post);
 
+    console.log("Checking if user should be ignored");
     if (await evaluator.isIgnoredUser()) {
         console.log(`User ${author.username} is in ignored group, skipping flood check`);
         return;
     }
 
+    console.log("Checking if quota is exceeded");
     if (!await evaluator.exceedsQuota()) {
         console.log(`${postId} by ${author.username} does not exceed quota`);
         return;
