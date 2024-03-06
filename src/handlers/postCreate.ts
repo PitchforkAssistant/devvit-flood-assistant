@@ -2,7 +2,7 @@ import {PostCreate} from "@devvit/protos";
 import {SetPostFlairOptions, TriggerContext} from "@devvit/public-api";
 import {getFloodAssistantConfigSlow} from "../appConfig.js";
 import {FloodingEvaluator} from "../evaluators.js";
-import {assembleRemovalReason, getRecommendedPlaceholdersFromPost, safeFormatInTimeZone, submitPostReply} from "devvit-helpers";
+import {assembleRemovalReason, getRecommendedPlaceholdersFromPost, hasPerformedActions, safeFormatInTimeZone, submitPostReply} from "devvit-helpers";
 
 export async function onPostCreate (event: PostCreate, context: TriggerContext) {
     console.log("running onPostCreate");
@@ -32,8 +32,16 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
         console.log(`${postId} by ${author.username} does not exceed quota`);
         return;
     }
+    console.log(`New post ${postId} by ${author.username} exceeds quota, removing`);
 
-    console.log(`New post by ${author.username} exceeds quota, removing ${postId}`);
+    // Double check that the post hasn't been removed while we were evaluating it.
+    const hasBeenRemoveActioned = await hasPerformedActions(context.reddit, subreddit.name, postId, ["removelink", "spamlink"]);
+    const refetchedPost = await context.reddit.getPostById(postId);
+    if (hasBeenRemoveActioned || refetchedPost.isRemoved() || refetchedPost.isSpam()) {
+        console.log(`Post ${postId} by ${author.username} has already been been removed by something else, skipping removal`);
+        return;
+    }
+
     await post.remove().catch(e => console.error(`Failed to remove ${postId}`, e));
 
     if (config.removalReasonId) {
