@@ -73,7 +73,7 @@ Devvit.addSettings([
                     const validatePositiveNumberFailed = await validatePositiveNumber(event, context);
                     if (validatePositiveNumberFailed) {
                         return validatePositiveNumberFailed;
-                    } else if (Number(event.value) > 168) {
+                    } else if (Number(event.value) > DEFAULTS.MAX_QUOTA_PERIOD) {
                         return ERRORS.QUOTA_PERIOD_TOO_LARGE;
                     }
                 },

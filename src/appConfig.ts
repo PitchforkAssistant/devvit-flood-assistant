@@ -1,6 +1,6 @@
 import {SetFlairOptions, SettingsClient} from "@devvit/public-api";
 import {CustomDateformat, getLocaleFromString, isCustomDateformat} from "devvit-helpers";
-import {KEYS} from "./constants.js";
+import {DEFAULTS, KEYS} from "./constants.js";
 import {enUS} from "date-fns/locale";
 
 export class FloodAssistantConfigError extends Error {
@@ -52,7 +52,7 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
     }
 
     const quotaPeriod = await settings.get<number>(KEYS.QUOTA_PERIOD);
-    if (!quotaPeriod || typeof quotaPeriod !== "number" || quotaPeriod <= 0 || quotaPeriod > 168) {
+    if (!quotaPeriod || typeof quotaPeriod !== "number" || quotaPeriod <= 0 || quotaPeriod > DEFAULTS.MAX_QUOTA_PERIOD) {
         throw new FloodAssistantConfigError(KEYS.QUOTA_PERIOD, quotaPeriod);
     }
 

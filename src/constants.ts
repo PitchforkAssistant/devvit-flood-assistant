@@ -64,11 +64,11 @@ export const DEFAULTS = {
     CUSTOM_DATE_TEMPLATE: "yyyy-MM-dd hh-mm-ss",
     CUSTOM_TIMEZONE: "UTC",
     CUSTOM_LOCALE: ["enUS"],
-    MAX_QUOTA_PERIOD: 168,
+    MAX_QUOTA_PERIOD: 744,
 };
 
 export const ERRORS = {
-    QUOTA_PERIOD_TOO_LARGE: "Please do not set the quota period to more than 168 hours (7 days). The amount of posts that can be stored in the app storage is limited.",
+    QUOTA_PERIOD_TOO_LARGE: "Please do not set the quota period to more than 744 hours (31 days). The amount of posts that can be stored in the app storage is limited.",
 };
 
 // Important keys
