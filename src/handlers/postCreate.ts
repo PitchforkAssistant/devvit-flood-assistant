@@ -68,9 +68,9 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
         "{{quota_next_iso}}": nextPostOpportunity.toISOString(),
         "{{quota_next_custom}}": safeFormatInTimeZone(nextPostOpportunity, config.customDateformat),
         "{{quota_oldest_id}}": (oldestQuotaPost?.id ?? "").substring(3),
-        "{{quota_oldest_url}}": oldestQuotaPost?.permalink ? `https://reddit.com/${oldestQuotaPost?.permalink}` : "",
+        "{{quota_oldest_url}}": oldestQuotaPost?.permalink ? `https://reddit.com${oldestQuotaPost?.permalink}` : "",
         "{{quota_newest_id}}": (newestQuotaPost?.id ?? "").substring(3),
-        "{{quota_newest_url}}": newestQuotaPost?.permalink ? `https://reddit.com/${newestQuotaPost?.permalink}` : "",
+        "{{quota_newest_url}}": newestQuotaPost?.permalink ? `https://reddit.com${newestQuotaPost?.permalink}` : "",
         "{{mod}}": (await context.reddit.getAppUser()).username,
     };
 
