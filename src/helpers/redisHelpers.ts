@@ -1,25 +1,7 @@
-import {ZMember} from "@devvit/protos";
 import {RedisClient} from "@devvit/public-api";
+import {isT3ID} from "@devvit/shared-types/tid.js";
 
 export type TrackedActionType = "remove" | "delete";
-
-/**
- * Adds multiple posts to the Redis store for a given author.
- * @param {RedisClient} redis The Redis client.
- * @param authorId The author's ID.
- * @param {Record<string, Date>} posts The posts to add. The keys are the post IDs and the values are the creation Dates.
- */
-export async function trackPosts (redis: RedisClient, authorId: string, posts: Record<string, Date>) {
-    const postArray: ZMember[] = Object.entries(posts).map(([postId, createdAt]) => ({member: postId, score: createdAt.getTime()}));
-
-    // Not sure what zAdd does if the array is empty, but it's probably best to avoid it.
-    if (postArray.length === 0) {
-        return;
-    }
-
-    await redis.hset("authors", {authorId: ""});
-    await redis.zAdd(`posts:${authorId}`, ...postArray);
-}
 
 /**
  * Adds a post to the Redis store for a given author.
@@ -29,8 +11,7 @@ export async function trackPosts (redis: RedisClient, authorId: string, posts: R
  * @param {Date} createdAt The creation Date.
  */
 export async function trackPost (redis: RedisClient, authorId: string, postId: string, createdAt: Date) {
-    await redis.hset("authors", {authorId: ""});
-    await redis.zAdd(`posts:${authorId}`, {member: postId, score: createdAt.getTime()});
+    await redis.zAdd("posts", {member: `${authorId}:${postId}`, score: createdAt.getTime()});
 }
 
 /**
@@ -41,7 +22,7 @@ export async function trackPost (redis: RedisClient, authorId: string, postId: s
  */
 export async function untrackPost (redis: RedisClient, authorId: string, postId: string) {
     try {
-        await redis.zRem(`posts:${authorId}`, [postId]); // If the set ends up empty, it will be removed by clearOldPostsByAuthorRedis
+        await redis.zRem("posts", [`${authorId}:${postId}`]); // If the set ends up empty, it will be removed by clearOldPostsByAuthorRedis
     } catch (e) {
         // Don't throw an error if the set doesn't exist.
         if (!String(e).toLowerCase().includes("redis: nil")) {
@@ -57,9 +38,16 @@ export async function untrackPost (redis: RedisClient, authorId: string, postId:
  * @returns {Record<string, Date>} A record of post IDs and their corresponding creation Dates.
  */
 export async function getPostsByAuthor (redis: RedisClient, authorId: string): Promise<Record<string, Date>> {
-    const posts = await redis.zRange(`posts:${authorId}`, -Infinity, Infinity, {by: "score"});
+    // TODO: Use redis.zScan once it's available.
+    const allPosts = await redis.zRange("posts", -Infinity, Infinity, {by: "score"});
+    const posts = allPosts.filter(post => post.member.startsWith(authorId));
     return posts.reduce((acc: Record<string, Date>, post) => {
-        acc[post.member] = new Date(post.score);
+        const postId = post.member.split(":")[1];
+        if (!postId || !isT3ID(postId)) {
+            console.warn(`Invalid posts entry found in Redis: ${post.member}`);
+            return acc;
+        }
+        acc[postId] = new Date(post.score);
         return acc;
     }, {});
 }
@@ -70,14 +58,8 @@ export async function getPostsByAuthor (redis: RedisClient, authorId: string): P
  * @param authorId The author's ID.
  * @param {Date} oldestAllowed The oldest allowed creation Date, all posts created before this will be removed.
  */
-export async function clearOldPostsByAuthor (redis: RedisClient, authorId: string, oldestAllowed: Date) {
-    await redis.zRemRangeByScore(`posts:${authorId}`, -Infinity, oldestAllowed.getTime());
-
-    const remainingPosts = await redis.zCard(`posts:${authorId}`);
-    if (remainingPosts === 0) {
-        await redis.del(`posts:${authorId}`);
-        await redis.hdel("authors", [authorId]);
-    }
+export async function clearOldPosts (redis: RedisClient, oldestAllowed: Date) {
+    await redis.zRemRangeByScore("posts", -Infinity, oldestAllowed.getTime());
 }
 
 /**

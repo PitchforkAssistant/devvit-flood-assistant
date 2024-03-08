@@ -2,7 +2,7 @@
 import {Post, RedditAPIClient, RedisClient, Subreddit, User} from "@devvit/public-api";
 import {FloodAssistantConfig} from "./appConfig.js";
 import {isContributor, isModerator} from "devvit-helpers";
-import {clearOldPostsByAuthor, getActionTime, getPostsByAuthor} from "./helpers/redisHelpers.js";
+import {clearOldPosts, getActionTime, getPostsByAuthor} from "./helpers/redisHelpers.js";
 
 export class FloodingEvaluator {
     public useCached = true;
@@ -158,7 +158,7 @@ export class FloodingEvaluator {
         }
 
         // Clear old posts from Redis
-        await clearOldPostsByAuthor(this.redis, this.author.id, this.cutoff);
+        await clearOldPosts(this.redis, this.cutoff);
 
         const trackedPosts = await getPostsByAuthor(this.redis, this.author.id);
 
