@@ -6,5 +6,8 @@
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "[markdown]": {
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    }
 }

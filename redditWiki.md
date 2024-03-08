@@ -6,6 +6,24 @@ App: https://developers.reddit.com/apps/floodassistant
 
 Source: https://github.com/PitchforkAssistant/devvit-flood-assistant
 
+# Change Log
+
+This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
+
+## 1.1.0
+
+- The app now uses Devvit's new Redis client for tracking posts instead of the old KV store. 
+  **Due to serious issues with the KV store, older versions of the apps may no longer work and must update to this version or beyond. For the same reason, it was not possible to migrate existing data to the new system. Updating to this version, all existing quotas will be reset.** 
+- Major rewrite of the FloodAssistant's code. This should improve the app's reliability and maintainability.
+- "Ignore Auto-Removed Posts" no longer needs to be enabled for posts removed by FloodAssistant to not count towards the quota, they will always be ignored.
+- New placeholders: `{{quota_oldest_id}}`, `{{quota_oldest_url}}`, `{{quota_newest_id}}`, and `{{quota_newest_url}}`.
+
+## 0.3.6
+
+- The locale field is now a dropdown with all supported locales instead of a text box (previously very long dropdowns had issues). If you previously entered a custom locale, you may need to reselect it.
+
+## 
+
 # Configuration
 
 This app has configurable settings for each of its subreddits. If you have installed it on your subreddit, you can find its settings at `https://developers.reddit.com/r/subreddit/apps/floodassistant` or by going to Mod Tools -> Installed Apps on new Reddit and clicking the Settings button next to Flooding Assistant.
@@ -24,11 +42,13 @@ If a user posts more than this number of posts in the configured period, they wi
 
 ### Quota Period
 
-This is the time period in which the quota period is enforced. This field is a number of hours. The hours can be fractional, for example `0.5` is 30 minutes. The maximum is `168` hours (7 days).
+This is the time period in which the quota period is enforced. This field is a number of hours. The hours can be fractional, for example `0.5` is 30 minutes. The maximum is `744` hours (31 days).
+
+Please note that increasing this value will not start retracking posts that have already aged out of the previous quota period. Decreasing it will however cause the app to discard posts that are older than the new quota period.
 
 ### Ignore Moderators
 
-If this is enabled, moderators of your subreddit will be ignored by this app.
+If this is enabled, posts made by moderators of your subreddit will never be removed by this app.
 
 ### Ignore Contributors
 
@@ -36,21 +56,21 @@ If this is enabled, users that have been added to the approved submitters list o
 
 ### Ignore Auto-Removed Posts
 
-If this is enabled, posts that are removed within 60 seconds of posting will not count towards the quota. This also means that posts that are removed for exceeding the quota will not further add to the quota.
+If this is enabled, posts that are removed within 60 seconds of posting will not count towards the quota, nor will removals done by AutoModerator. Posts that are automatically removed by this app never count towards the quota.
 
-If this is disabled, all posts will count towards the quota, even if they are removed as soon as they are posted for any reason.
+If this is disabled, all failed posts will count towards the quota, even if they are removed as soon as they are posted for any reason.
 
 ### Ignore Removed Posts
 
-If this is enabled, posts that are removed by moderators will not count towards the quota. This also effectively enables the "Ignore Auto-Removed Posts" setting.
+If this is enabled, posts that are removed by moderators will not count towards the quota. This effectively also enables the "Ignore Auto-Removed Posts" setting.
 
-Posts are readded to the quota if they are approved after being removed and still fall within the quota period.
+Posts that are removed and then reapproved will still count towards the quota.
 
 ### Ignore Deleted Posts
 
 If this is enabled, posts that are deleted by the author will not count towards the quota.
 
-If "Ignore Removed Posts" is disabled, posts that are removed by moderators and later deleted by the author will still count towards the quota.
+Please note that deleted posts will still count towards the quota if they were removed by the moderators before being deleted.
 
 ## Removal Settings
 
@@ -106,6 +126,10 @@ Below is a list of all supported placeholders:
 | `{{quota_next_iso}}`           | When the user will be able to post next in the ISO 8601 format                                                                     |
 | `{{quota_next_unix}}`          | When the user will be able to post next as the unix epoch in seconds                                                               |
 | `{{quota_next_custom}}`        | When the user will be able to post next as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options) |
+| `{{quota_oldest_id}}`          | ID of the oldest post that counts towards the author's quota.                                                                      |
+| `{{quota_oldest_url}}`         | Link to the oldest post that counts towards the author's quota.                                                                    |
+| `{{quota_newest_id}}`          | ID of the most recent post that counts towards the author's quota.                                                                 |
+| `{{quota_newest_url}}`         | Link to the most recent post that counts towards the author's quota.                                                               |
 | `{{author}}`                   | Username of the author                                                                                                             |
 | `{{subreddit}}`                | Display name of the subreddit                                                                                                      |
 | `{{body}}`                     | Post's body (*not recommended*)                                                                                                    |
@@ -158,100 +182,4 @@ This is the timezone used for `{{created_custom}}`, `{{quota_next_custom}}`, and
 
 #### Locale
 
-This field is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. It affects locale specific values such as the first day of the week, month names, abbrivations, etc. The default value is `enUS`. Below is a table of all supported locales:
-
-| Name                      | Value      |
-| :------------------------ | :--------- |
-| Afrikaans                 | `af`       |
-| Arabic                    | `ar`       |
-| Arabic - Algeria          | `arDZ`     |
-| Arabic - Egypt            | `arEG`     |
-| Arabic - Morocco          | `arMA`     |
-| Arabic - Saudi Arabia     | `arSA`     |
-| Arabic - Tunisia          | `arTN`     |
-| Azeri                     | `az`       |
-| Belarusian                | `be`       |
-| Belarusian - Taraškievica | `beTarask` |
-| Bulgarian                 | `bg`       |
-| Bengali                   | `bn`       |
-| Bosnian                   | `bs`       |
-| Catalan                   | `ca`       |
-| Czech                     | `cs`       |
-| Welsh                     | `cy`       |
-| Danish                    | `da`       |
-| German                    | `de`       |
-| German - Austria          | `deAT`     |
-| Greek                     | `el`       |
-| English - Australia       | `enAU`     |
-| English - Canada          | `enCA`     |
-| English - Great Britain   | `enGB`     |
-| English - Ireland         | `enIE`     |
-| English - India           | `enIN`     |
-| English - New Zealand     | `enNZ`     |
-| English - United States   | `enUS`     |
-| English - Zimbabwe        | `enZA`     |
-| Esperanto                 | `eo`       |
-| Spanish                   | `es`       |
-| Estonian                  | `et`       |
-| Basque                    | `eu`       |
-| Farsi - Iran              | `faIR`     |
-| Finnish                   | `fi`       |
-| French                    | `fr`       |
-| French - Canada           | `frCA`     |
-| French - Switzerland      | `frCH`     |
-| Frisian                   | `fy`       |
-| Gaelic                    | `gd`       |
-| Galician                  | `gl`       |
-| Gujarati                  | `gu`       |
-| Hebrew                    | `he`       |
-| Hindi                     | `hi`       |
-| Croatian                  | `hr`       |
-| Haitian Creole            | `ht`       |
-| Hungarian                 | `hu`       |
-| Armenian                  | `hy`       |
-| Indonesian                | `id`       |
-| Icelandic                 | `is`       |
-| Italian                   | `it`       |
-| Italian - Switzerland     | `itCH`     |
-| Japanese                  | `ja`       |
-| Japanese - Hiragana       | `jaHira`   |
-| Georgian                  | `ka`       |
-| Kazakh                    | `kk`       |
-| Khmer                     | `km`       |
-| Kannada                   | `kn`       |
-| Korean                    | `ko`       |
-| Luxembourgish             | `lb`       |
-| Lithuanian                | `lt`       |
-| Latvian                   | `lv`       |
-| Macedonian                | `mk`       |
-| Mongolian                 | `mn`       |
-| Malay                     | `ms`       |
-| Maltese                   | `mt`       |
-| Norwegian - Bokml         | `nb`       |
-| Dutch                     | `nl`       |
-| Dutch - Belgium           | `nlBE`     |
-| Norwegian - Nynorsk       | `nn`       |
-| Occitan                   | `oc`       |
-| Polish                    | `pl`       |
-| Portuguese                | `pt`       |
-| Portuguese - Brazil       | `ptBR`     |
-| Romanian                  | `ro`       |
-| Russian                   | `ru`       |
-| Slovak                    | `sk`       |
-| Slovenian                 | `sl`       |
-| Albanian                  | `sq`       |
-| Serbian - Cyrillic        | `sr`       |
-| Serbian - Latin           | `srLatn`   |
-| Swedish                   | `sv`       |
-| Tamil                     | `ta`       |
-| Telugu                    | `te`       |
-| Thai                      | `th`       |
-| Turkish                   | `tr`       |
-| Uyghur                    | `ug`       |
-| Ukrainian                 | `uk`       |
-| Uzbek - Latin             | `uz`       |
-| Uzbek - Cyrillic          | `uzCyrl`   |
-| Vietnamese                | `vi`       |
-| Chinese                   | `zhCN`     |
-| Chinese - Hong Kong       | `zhHK`     |
-| Chinese - Taiwan          | `zhTW`     |
+This field is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. It affects locale specific values such as the first day of the week, month names, abbrivations, etc. The dropdown contains a list of all supported locales.
