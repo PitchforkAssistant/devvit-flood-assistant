@@ -24,6 +24,7 @@ export async function onModAction (event: ModAction, context: TriggerContext) {
         return;
     }
 
+    console.log(`tracking ${event.action} for ${postId}`);
     if (event.action === "approvelink") {
         await untrackActionTime(context.redis, "remove", postId);
     } else {

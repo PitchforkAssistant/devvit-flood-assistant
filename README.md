@@ -1,6 +1,6 @@
-# Flood^(ing)Assistant
+# FloodingAssistant
 
-FloodAssistant is a Devvit app that allows you to restrict users to a certain number of posts within a certain time frame. [View the full documentation on the wiki.](https://www.reddit.com/r/PitchforkAssistant/wiki/floodassistant)
+FloodAssistant (or FloodingAssistant) is a Devvit app that allows you to restrict users to a certain number of posts within a certain time frame. [**View the full documentation on the wiki.**](https://www.reddit.com/r/PitchforkAssistant/wiki/floodassistant)
 
 ## Change Log
 

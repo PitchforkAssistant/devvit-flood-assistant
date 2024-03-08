@@ -24,5 +24,6 @@ export async function onPostDelete (event: PostDelete, context: TriggerContext) 
         return;
     }
 
+    console.log(`tracking deletion of ${event.postId}`);
     await trackActionTime(context.redis, "delete", event.postId, deletedAt);
 }
