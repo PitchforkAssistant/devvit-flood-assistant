@@ -10,6 +10,10 @@ Source: https://github.com/PitchforkAssistant/devvit-flood-assistant
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
+### 1.1.1
+
+- Minor performance improvements, especially for subreddits with a large number of posts. More specifically, getPostsByAuthor now uses the recently added zScan method.
+
 ## 1.1.0
 
 - The app now uses Devvit's new Redis client for tracking posts instead of the old KV store. 

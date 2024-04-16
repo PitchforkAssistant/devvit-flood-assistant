@@ -38,18 +38,15 @@ export async function untrackPost (redis: RedisClient, authorId: string, postId:
  * @returns {Record<string, Date>} A record of post IDs and their corresponding creation Dates.
  */
 export async function getPostsByAuthor (redis: RedisClient, authorId: string): Promise<Record<string, Date>> {
-    // TODO: Use redis.zScan once it's available.
-    const allPosts = await redis.zRange("posts", -Infinity, Infinity, {by: "score"});
-    const posts = allPosts.filter(post => post.member.startsWith(authorId));
-    return posts.reduce((acc: Record<string, Date>, post) => {
-        const postId = post.member.split(":")[1];
-        if (!postId || !isT3ID(postId)) {
-            console.warn(`Invalid posts entry found in Redis: ${post.member}`);
-            return acc;
+    const storedPosts = (await redis.zScan("posts", 0, `${authorId}:*`, Infinity)).members;
+    const posts: Record<string, Date> = {};
+    storedPosts.forEach(post => {
+        const [, postId] = post.member.split(":");
+        if (isT3ID(postId)) {
+            posts[postId] = new Date(post.score);
         }
-        acc[postId] = new Date(post.score);
-        return acc;
-    }, {});
+    });
+    return posts;
 }
 
 /**
