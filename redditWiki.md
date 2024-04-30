@@ -10,7 +10,13 @@ Source: https://github.com/PitchforkAssistant/devvit-flood-assistant
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
-### 1.1.1
+
+## 1.1.2
+
+- Fixed an issue where custom date placeholder options were not being properly validated before saving. This could cause the app to crash if an invalid date format was entered. **I highly recommend hitting save on the app's settings page again to ensure those settings are valid.**
+
+
+## 1.1.1
 
 - Minor performance improvements, especially for subreddits with a large number of posts. More specifically, getPostsByAuthor now uses the recently added zScan method.
 
@@ -161,11 +167,11 @@ Below is a list of all supported placeholders:
 | `{{created_custom}}`           | Post's creation time as defined by the [custom date placeholder options](#wiki_custom_date_placeholder_options)                    |
 
 
-### Custom Date Placeholder Options
+## Custom Date Placeholder Options
 
 These settings are used with used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. If your removal reason doesn't contain any of them, you can completely ignore these options.
 
-#### Date Format Template
+### Date Format Template
 
 This date template is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. The application uses date-fns to format custom dates, the patterns for these are different from the Python timeformat Flair_Helper used. It uses the date formatting specified in the Unicode Technical Standard #35 with a few extra options, [view a full list of patterns supported by date-fns](https://date-fns.org/v2.30.0/docs/format). The default value is `yyyy-MM-dd HH-mm-ss`, below is a list of some common patterns:
 
@@ -180,10 +186,10 @@ This date template is used for `{{created_custom}}`, `{{quota_next_custom}}`, an
 | Second | s, ss               | 2, 02                |
 | Text   | yyyy'y' MMMM 'text' | 2023y July text      |
 
-#### Timezone
+### Timezone
 
 This is the timezone used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. The default value is `UTC`. This field can accept both timezone identifiers and offsets. [View a full list of supported timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) or simply provide it in the format `+HH:mm` or `-HH:mm` (ie. `+05:30` or `-08:00`).
 
-#### Locale
+### Locale
 
 This field is used for `{{created_custom}}`, `{{quota_next_custom}}`, and `{{time_custom}}` placeholders. It affects locale specific values such as the first day of the week, month names, abbrivations, etc. The dropdown contains a list of all supported locales.

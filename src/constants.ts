@@ -45,7 +45,7 @@ export const HELP_TEXT = {
     REMOVAL_FLAIR_TEXT: "Text to display on the removal flair. Placeholders are supported.",
     REMOVAL_FLAIR_CSS: "CSS class to apply to the removal flair.",
     REMOVAL_FLAIR_ID: "Template ID of the removal flair.",
-    CUSTOM_DATE_SETTINGS: "These settings let you customize the {{time_custom}} placeholders. If your removal reason doesn't use a custom time placeholder, you can completely ignore these settings.",
+    CUSTOM_DATE_SETTINGS: "These settings let you customize the {{time_custom}} placeholders. If you don't use any custom time placeholders, you can completely ignore these settings.",
     CUSTOM_DATE_TEMPLATE: `This is used by date-fns to format {{time_custom}}. See: ${LINKS.TIMEFORMAT}`,
     CUSTOM_TIMEZONE: "Timezone used for {{time_custom}}, must be a UTC offset or TZ identifier (e.g. UTC, +02:00, America/New_York, etc).",
     CUSTOM_LOCALE: "Locale used by {{time_custom}} (e.g. enUS, de, etc).",

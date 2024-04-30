@@ -5,7 +5,7 @@ import {enUS} from "date-fns/locale";
 
 export class FloodAssistantConfigError extends Error {
     constructor (key: string, value: unknown) {
-        super(`Error parsing ${key} in FloodAssistantConfig, got unexpected value: ${String(value)}`);
+        super(`Error parsing ${key} in FloodAssistantConfig, got unexpected value: ${JSON.stringify(value)}`);
         this.name = "FloodAssistantConfigError";
     }
 }
@@ -82,8 +82,8 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
     }
 
     const customDateformat = {
-        dateformat: await settings.get<string>(KEYS.CUSTOM_DATE_TEMPLATE) ?? "yyyy-MM-dd hh-mm-ss",
-        timezone: await settings.get<string>(KEYS.CUSTOM_TIMEZONE) ?? "UTC",
+        dateformat: await settings.get<string>(KEYS.CUSTOM_DATE_TEMPLATE) || DEFAULTS.CUSTOM_DATE_TEMPLATE,
+        timezone: await settings.get<string>(KEYS.CUSTOM_TIMEZONE) || DEFAULTS.CUSTOM_TIMEZONE,
         locale: getLocaleFromString(await settings.get<string>(KEYS.CUSTOM_LOCALE) ?? "") ?? enUS,
     };
     if (!isCustomDateformat(customDateformat)) {
