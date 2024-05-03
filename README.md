@@ -6,6 +6,10 @@ FloodAssistant (or FloodingAssistant) is a Devvit app that allows you to restric
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
+### 1.1.3
+
+- Upgraded to a newer version of Devvit to resolve an issue where the app would break if the subreddit used the new "channels" and "chat_config" moderator permissions.
+
 ### 1.1.2
 
 - Fixed an issue where custom date placeholder options were not being properly validated before saving. This could cause the app to crash if an invalid date format was entered. **I highly recommend hitting save on the app's settings page again to ensure those settings are valid.**
