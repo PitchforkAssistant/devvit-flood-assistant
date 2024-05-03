@@ -35,7 +35,7 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
     console.log(`New post ${postId} by ${author.username} exceeds quota, removing`);
 
     // Double check that the post hasn't been removed while we were evaluating it.
-    const hasBeenRemoveActioned = await hasPerformedActions(context.reddit, subreddit.name, postId, ["removelink", "spamlink"]);
+    const hasBeenRemoveActioned = await hasPerformedActions(context.reddit, {subredditName: subreddit.name, actionTargetId: postId, actionTypes: ["removelink", "spamlink"]});
     const refetchedPost = await context.reddit.getPostById(postId);
     if (hasBeenRemoveActioned || refetchedPost.isRemoved() || refetchedPost.isSpam()) {
         console.log(`Post ${postId} by ${author.username} has already been been removed by something else, skipping removal`);
