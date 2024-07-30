@@ -8,7 +8,7 @@ This section summarizes the changes made for each published version of the app, 
 
 ### 1.1.4
 
-- Simplifies the check that was used for avoiding double-actioning posts that were removed before we could action them. This was causing failures to remove posts in some cases.
+- Simplifies the check that was used for avoiding double-actioning posts that were removed by someone else (automod, bot, etc) before we could action them. This was causing Devvit metadata to be lost in some mysterious cases, resulting in the removal failing.
 
 ### 1.1.3
 
