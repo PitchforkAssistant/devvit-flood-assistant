@@ -89,4 +89,8 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
         };
         await context.reddit.setPostFlair(flairOptions).catch(e => console.error(`Failed to set ${postId} removal flair`, e));
     }
+
+    if (config.removalLock) {
+        await post.lock().catch(e => console.error(`Failed to lock ${postId}`, e));
+    }
 }

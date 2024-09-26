@@ -21,8 +21,10 @@ export type FloodAssistantConfig = {
     ignoreDeleted: boolean;
 
     removalReasonId?: string;
+    removalLock: boolean;
     removalComment?: string;
     removalFlair?: Omit<SetFlairOptions, "subredditName" | "textColor" | "backgroundColor">;
+
     customDateformat: CustomDateformat;
 }
 
@@ -56,7 +58,7 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
         throw new FloodAssistantConfigError(KEYS.QUOTA_PERIOD, quotaPeriod);
     }
 
-    const booleanKeys = [KEYS.IGNORE_MODS, KEYS.IGNORE_MEMBERS, KEYS.IGNORE_AUTO_REMOVED, KEYS.IGNORE_REMOVED, KEYS.IGNORE_DELETED];
+    const booleanKeys = [KEYS.IGNORE_MODS, KEYS.IGNORE_MEMBERS, KEYS.IGNORE_AUTO_REMOVED, KEYS.IGNORE_REMOVED, KEYS.IGNORE_DELETED, KEYS.REMOVAL_LOCK];
     const booleanSettings: Record<string, boolean> = {};
     for (const key of booleanKeys) {
         const value = await settings.get<boolean>(key);
@@ -99,6 +101,7 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
         ignoreRemoved: booleanSettings[KEYS.IGNORE_REMOVED],
         ignoreDeleted: booleanSettings[KEYS.IGNORE_DELETED],
         removalReasonId,
+        removalLock: booleanSettings[KEYS.REMOVAL_LOCK],
         removalComment,
         removalFlair,
         customDateformat,

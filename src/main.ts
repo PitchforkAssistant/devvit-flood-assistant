@@ -127,6 +127,13 @@ Devvit.addSettings([
                 helpText: HELP_TEXT.REMOVAL_REASON_ID,
             },
             {
+                type: "boolean",
+                name: "removalLock",
+                defaultValue: DEFAULTS.REMOVAL_LOCK,
+                label: LABELS.REMOVAL_LOCK,
+                helpText: HELP_TEXT.REMOVAL_LOCK,
+            },
+            {
                 type: "paragraph",
                 name: "removalComment",
                 defaultValue: DEFAULTS.REMOVAL_COMMENT,
