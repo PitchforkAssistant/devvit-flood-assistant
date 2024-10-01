@@ -36,7 +36,9 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
 
     // Double check that the post hasn't been removed while we were evaluating it.
     const refetchedPost = await context.reddit.getPostById(postId);
-    if (refetchedPost.isRemoved() || refetchedPost.isSpam() || refetchedPost.removedByCategory && refetchedPost.removedByCategory !== "automod_filtered") {
+    if (refetchedPost.isRemoved() ||
+           refetchedPost.isSpam() ||
+           refetchedPost.removedByCategory && refetchedPost.removedByCategory !== "automod_filtered" && refetchedPost.removedByCategory !== "reddit") {
         console.log(`Post ${postId} by ${author.username} has already been been removed by something else, skipping removal`);
         return;
     }
