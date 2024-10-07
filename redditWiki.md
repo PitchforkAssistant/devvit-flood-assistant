@@ -10,11 +10,12 @@ Source: https://github.com/PitchforkAssistant/devvit-flood-assistant
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
-## 1.1.5
+## 1.2.0
 
+- Added "Check User's Quota" button to the subreddit context menu. This button will open a form that allows moderators to check a specific user's quota state. You will be able to see which posts are counted towards their quota and which are excluded and why.
 - Added option to lock posts after removal.
 - Posts that exceed the quota will now be removed on subreddits that have the spam filter set to "all".
-- Added "Check User's Quota" button to the subreddit context menu. This button will open a form that allows you to check a specific user's quota state. You will be able to see which posts are counted towards their quota and which are excluded and why.
+- Added validation to removal reason ID field to ensure it exists on the subreddit.
 
 ## 1.1.4
 
