@@ -6,6 +6,12 @@ FloodAssistant (or FloodingAssistant) is a Devvit app that allows you to restric
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
+### 1.1.5
+
+- Added option to lock posts after removal.
+- Posts that exceed the quota will now be removed on subreddits that have the spam filter set to "all".
+- Added "Check User's Quota" button to the subreddit context menu. This button will open a form that allows you to check a specific user's quota state. You will be able to see which posts are counted towards their quota and which are excluded and why.
+
 ### 1.1.4
 
 - Simplifies the check that was used for avoiding double-actioning posts that were removed by someone else (automod, bot, etc) before we could action them. This was causing Devvit metadata to be lost in some mysterious cases, resulting in the removal failing.

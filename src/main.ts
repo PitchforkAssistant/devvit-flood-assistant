@@ -8,6 +8,11 @@ import {onPostSubmit} from "./handlers/postSubmit.js";
 import {onRunClearOldPosts} from "./handlers/scheduler.js";
 import {onPostDelete} from "./handlers/postDelete.js";
 
+export {quotaButton} from "./buttons/quotaButton.js";
+export {configErrorForm} from "./forms/configErrorForm.js";
+export {enterUserForm} from "./forms/enterUserForm.js";
+export {userQuotaForm} from "./forms/userQuotaForm.js";
+
 Devvit.configure({
     redditAPI: true,
     redis: true,

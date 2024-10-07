@@ -1,3 +1,5 @@
+import {QuotaExclusionReason} from "./evaluators.js";
+
 export const LATEST_VERSION = 0;
 
 // Links
@@ -27,6 +29,19 @@ export const LABELS = {
     CUSTOM_DATE_TEMPLATE: "Date Format Template",
     CUSTOM_TIMEZONE: "Timezone",
     CUSTOM_LOCALE: "Locale",
+    BUTTON_QUOTA: "Check User's Quota",
+    FORM_CONFIG_ERROR: "Config Error",
+    FORM_CONFIG_ERROR_NAME: "Unspecified Error Name",
+    FORM_CONFIG_ERROR_ACCEPT: "Open App Settings",
+    FORM_CANCEL: "Close",
+    FORM_ENTER_USERNAME: "Username",
+    FORM_ENTER_USER_ACCEPT: "Lookup",
+    FORM_USER_QUOTA_INFO: "User Quota Information",
+    FORM_TRACKED_POSTS: "Tracked Posts",
+    FORM_QUOTA_POSTS: "Quota Posts",
+    FORM_USER_QUOTA_INFO_ACCEPT: "View Selected Post",
+    FORM_SELECT_POST: "Select Post",
+    FORM_NEXT_POST_OPPORTUNITY: "Next Post Opportunity",
 };
 
 // Help labels
@@ -51,6 +66,12 @@ export const HELP_TEXT = {
     CUSTOM_DATE_TEMPLATE: `This is used by date-fns to format {{time_custom}}. See: ${LINKS.TIMEFORMAT}`,
     CUSTOM_TIMEZONE: "Timezone used for {{time_custom}}, must be a UTC offset or TZ identifier (e.g. UTC, +02:00, America/New_York, etc).",
     CUSTOM_LOCALE: "Locale used by {{time_custom}} (e.g. enUS, de, etc).",
+    BUTTON_QUOTA: "Check the current state of a user's post quota.",
+    FORM_CONFIG_ERROR: "An error occurred while loading the app settings.",
+    FORM_ENTER_USERNAME: "Enter the username of the user whose post quota you want to check.",
+    FORM_USER_QUOTA_INFO: "This form shows the posts that are currently being tracked for the user, as well as whether those posts are count towards the user's post quota.",
+    FORM_NEXT_POST_OPPORTUNITY: "This is when the user will have an empty spot in their post limit quota.",
+    FORM_SELECT_POST: "You will be directed to view the selected post after submitting the form.",
 };
 
 // Default values
@@ -72,6 +93,10 @@ export const DEFAULTS = {
 
 export const ERRORS = {
     QUOTA_PERIOD_TOO_LARGE: "Please do not set the quota period to more than 744 hours (31 days). The amount of posts that can be stored in the app storage is limited.",
+    FORM_CONFIG_ERROR_MESSAGE: "Unspecified Error Message",
+    FORM_NO_USER: "ERROR: You must enter a username.",
+    FORM_INVALID_USER: "ERROR: Failed to get user. Does the user exist?",
+    FORM_NO_POST_SELECTED: "You did not select a post to navigate to, closing form.",
 };
 
 // Important keys
@@ -94,4 +119,13 @@ export const KEYS = {
     CUSTOM_LOCALE: "customLocale",
     JOB_CLEAR: "clearOldPosts",
     INSTALL_VERSION: "installedVersion",
+};
+
+export const EXCLUSION_REASONS: Record<QuotaExclusionReason, string> = {
+    age: "Older Than Quota Period",
+    autoRemoved: "Ignoring Auto-Removed Posts",
+    currentPost: "Ignoring Current Post",
+    deleted: "Ignoring Deleted Posts",
+    removed: "Ignoring Removed Posts",
+    floodingRemoved: "Flooding Removed",
 };

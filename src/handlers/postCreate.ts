@@ -45,11 +45,6 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
 
     await post.remove().catch(e => console.error(`Failed to remove ${postId}`, e));
 
-    if (config.removalReasonId) {
-        await post.addRemovalNote({reasonId: config.removalReasonId, modNote: "Quota Exceeded"})
-            .catch(e => console.error(`Failed to add removal note to ${postId}`, e));
-    }
-
     // If there's no removal comment or flair, we don't need to do anything else.
     if (!config.removalComment && !config.removalFlair) {
         return;
@@ -94,5 +89,10 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
 
     if (config.removalLock) {
         await post.lock().catch(e => console.error(`Failed to lock ${postId}`, e));
+    }
+
+    if (config.removalReasonId) {
+        await post.addRemovalNote({reasonId: config.removalReasonId, modNote: "Quota Exceeded"})
+            .catch(e => console.error(`Failed to add removal note to ${postId}`, e));
     }
 }
