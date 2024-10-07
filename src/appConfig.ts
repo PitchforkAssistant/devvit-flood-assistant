@@ -73,7 +73,7 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
 
     const removalFlairText = await settings.get<string>(KEYS.REMOVAL_FLAIR_TEXT);
     const removalFlairCss = await settings.get<string>(KEYS.REMOVAL_FLAIR_CSS);
-    const removalFlairId = await settings.get<string>(KEYS.REMOVAL_FLAIR_ID);
+    const removalFlairId = (await settings.get<string>(KEYS.REMOVAL_FLAIR_ID))?.trim();
     let removalFlair: Omit<SetFlairOptions, "subredditName"> | undefined;
     if (removalFlairText || removalFlairCss || removalFlairId) {
         removalFlair = {
