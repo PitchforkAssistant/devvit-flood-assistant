@@ -68,7 +68,7 @@ export async function getFloodAssistantConfigSlow (settings: SettingsClient): Pr
         booleanSettings[key] = value;
     }
 
-    const removalReasonId = await settings.get<string>(KEYS.REMOVAL_REASON_ID);
+    const removalReasonId = (await settings.get<string>(KEYS.REMOVAL_REASON_ID))?.trim();
     const removalComment = await settings.get<string>(KEYS.REMOVAL_COMMENT);
 
     const removalFlairText = await settings.get<string>(KEYS.REMOVAL_FLAIR_TEXT);

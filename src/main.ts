@@ -130,6 +130,22 @@ Devvit.addSettings([
                 name: "removalReasonId",
                 label: LABELS.REMOVAL_REASON_ID,
                 helpText: HELP_TEXT.REMOVAL_REASON_ID,
+                onValidate: async (event, context) => {
+                    const removalReasonId = event.value?.trim();
+                    if (!removalReasonId) {
+                        return;
+                    }
+                    const subreddit = await context.reddit.getCurrentSubreddit();
+                    const removalReasons = await context.reddit.getSubredditRemovalReasons(subreddit.name);
+
+                    for (const reason of removalReasons) {
+                        if (reason.id === removalReasonId) {
+                            return;
+                        }
+                    }
+
+                    return `Removal reason with the ID "${removalReasonId}" does not exist.\n\n/r/${subreddit.name} has the following removal reasons:\n${removalReasons.map(reason => `${reason.id}: ${reason.title}`).join(";\n")}`;
+                },
             },
             {
                 type: "boolean",
