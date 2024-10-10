@@ -1,5 +1,6 @@
 import {RedisClient} from "@devvit/public-api";
 import {isT3ID} from "@devvit/shared-types/tid.js";
+import {zScanAll} from "devvit-helpers";
 
 export type TrackedActionType = "remove" | "delete";
 
@@ -38,7 +39,7 @@ export async function untrackPost (redis: RedisClient, authorId: string, postId:
  * @returns {Record<string, Date>} A record of post IDs and their corresponding creation Dates.
  */
 export async function getPostsByAuthor (redis: RedisClient, authorId: string): Promise<Record<string, Date>> {
-    const storedPosts = (await redis.zScan("posts", 0, `${authorId}:*`, Infinity)).members;
+    const storedPosts = await zScanAll(redis, "posts", `${authorId}:*`);
     const posts: Record<string, Date> = {};
     storedPosts.forEach(post => {
         const [, postId] = post.member.split(":");
