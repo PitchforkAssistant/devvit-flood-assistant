@@ -18,6 +18,11 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
     const author = await context.reddit.getUserById(authorId);
     const post = await context.reddit.getPostById(postId);
 
+    if (!author) {
+        console.error(`Failed to get author ${authorId} for evaluating post ${postId}`);
+        return;
+    }
+
     console.log("Creating FloodingEvaluator");
     const evaluator = new FloodingEvaluator(config, context.reddit, context.redis, subreddit, author, post);
 

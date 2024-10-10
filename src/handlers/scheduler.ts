@@ -2,7 +2,7 @@ import {ScheduledJobEvent, TriggerContext} from "@devvit/public-api";
 import {toNumberOrDefault} from "devvit-helpers";
 import {clearOldPosts, clearOldActionTimes} from "../helpers/redisHelpers.js";
 
-export async function onRunClearOldPosts (event: ScheduledJobEvent, context: TriggerContext) {
+export async function onRunClearOldPosts (event: ScheduledJobEvent<undefined>, context: TriggerContext) {
     console.log("running onRunClearOldPosts");
 
     // Clear posts older than the quota period from Redis.

@@ -23,8 +23,12 @@ const form: Form = {
     cancelLabel: LABELS.FORM_CANCEL,
 };
 
-const formHandler: FormOnSubmitEventHandler = async (event: FormOnSubmitEvent, context: Context) => {
-    const username: unknown = event.values.username;
+export type EnterUserFormSubmitData = {
+    username?: string;
+}
+
+const formHandler: FormOnSubmitEventHandler<EnterUserFormSubmitData> = async (event: FormOnSubmitEvent<EnterUserFormSubmitData>, context: Context) => {
+    const username = event.values.username;
     if (!username || typeof username !== "string") {
         context.ui.showToast({text: ERRORS.FORM_NO_USER, appearance: "neutral"});
         return;
@@ -33,6 +37,9 @@ const formHandler: FormOnSubmitEventHandler = async (event: FormOnSubmitEvent, c
     let user: User | undefined;
     try {
         user = await context.reddit.getUserByUsername(username);
+        if (!user) {
+            throw new Error("User unde");
+        }
     } catch (e) {
         console.log("Error getting user in form: ", e);
         context.ui.showToast({text: ERRORS.FORM_INVALID_USER, appearance: "neutral"});

@@ -1,12 +1,12 @@
-import {Context, Data, Devvit, FormFunction, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler} from "@devvit/public-api";
+import {Context, Devvit, FormFunction, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler} from "@devvit/public-api";
 import {ERRORS, HELP_TEXT, LABELS} from "../constants.js";
 
-interface ErrorData extends Data {
+type ErrorData = {
     errorName?: string;
     errorMessage?: string;
 }
 
-const form: FormFunction = (data: ErrorData) => ({
+const form: FormFunction<ErrorData> = (data: ErrorData) => ({
     fields: [
         {
             type: "paragraph",
@@ -22,10 +22,15 @@ const form: FormFunction = (data: ErrorData) => ({
     cancelLabel: LABELS.FORM_CANCEL,
 });
 
-const formHandler: FormOnSubmitEventHandler = async (event: FormOnSubmitEvent, context: Context) => {
+type ErrorFormSubmitData = {
+    error?: string;
+}
+
+const formHandler: FormOnSubmitEventHandler<ErrorFormSubmitData> = async (event: FormOnSubmitEvent<ErrorFormSubmitData>, context: Context) => {
     const appAccount = await context.reddit.getAppUser();
     const subreddit = await context.reddit.getCurrentSubreddit();
     context.ui.navigateTo(`https://developers.reddit.com/r/${subreddit.name}/apps/${appAccount.username}`);
 };
 
 export const configErrorForm: FormKey = Devvit.createForm(form, formHandler);
+

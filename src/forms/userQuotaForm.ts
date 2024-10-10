@@ -1,22 +1,22 @@
-import {Context, Data, Devvit, FormFunction, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler} from "@devvit/public-api";
+import {Context, Devvit, FormFunction, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler} from "@devvit/public-api";
 import {ERRORS, EXCLUSION_REASONS, HELP_TEXT, LABELS} from "../constants.js";
 import {QuotaIncludedResult} from "../evaluators.js";
 
-export interface PostBasics {
+export type PostBasics = {
     createdAt: number;
     id: string;
     title: string;
     quotaIncluded: QuotaIncludedResult;
 }
 
-export interface QuotaData extends Data {
+export type QuotaData = {
     posts?: PostBasics[];
     authorId?: string;
     authorName?: string;
     nextPostOpportunity?: number;
 }
 
-const form: FormFunction = (data: QuotaData) => ({
+const form: FormFunction<QuotaData> = (data: QuotaData) => ({
     fields: [
         {
             type: "group",
@@ -62,7 +62,12 @@ const form: FormFunction = (data: QuotaData) => ({
     cancelLabel: LABELS.FORM_CANCEL,
 });
 
-const formHandler: FormOnSubmitEventHandler = async (event: FormOnSubmitEvent, context: Context) => {
+export type QuotaFormSubmitData = {
+    selectPost?: string[];
+    // We don't really care about the rest of the data from the disabled fields, so we won't define it here.
+}
+
+const formHandler: FormOnSubmitEventHandler<QuotaFormSubmitData> = async (event: FormOnSubmitEvent<QuotaFormSubmitData>, context: Context) => {
     if (!Array.isArray(event.values.selectPost) || event.values.selectPost.length === 0 || !event.values.selectPost[0] || typeof event.values.selectPost[0] !== "string") {
         context.ui.showToast({text: ERRORS.FORM_NO_POST_SELECTED, appearance: "neutral"});
         return;
