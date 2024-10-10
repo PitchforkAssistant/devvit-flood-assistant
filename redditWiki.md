@@ -10,6 +10,11 @@ Source: https://github.com/PitchforkAssistant/devvit-flood-assistant
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
+## 1.3.0
+
+- Fixed an issue where the app was unable to retrieve tracked posts in some subreddits with very high post volume or a very long quota period.
+- Upgraded to [Devvit 0.11](https://www.reddit.com/r/Devvit/comments/1g03yxj/devvit_0110_released_to_main_including_breaking/)
+
 ## 1.2.0
 
 - Added "Check User's Quota" button to the subreddit context menu. This button will open a form that allows moderators to check a specific user's quota state. You will be able to see which posts are counted towards their quota and which are excluded and why.
