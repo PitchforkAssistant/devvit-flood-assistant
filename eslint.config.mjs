@@ -29,6 +29,10 @@ export default [{
         vitest,
     },
 
+    files: [
+                "**/*.ts"
+            ],
+
     languageOptions: {
         parser: tsParser,
         ecmaVersion: 5,
