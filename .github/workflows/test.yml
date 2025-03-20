@@ -1,5 +1,12 @@
 name: build-test-lint
-on: push
+on:
+    pull_request:
+    push:
+permissions:
+    contents: read
+    actions: read
+    checks: write
+    status: write
 jobs:
     test:
         runs-on: ubuntu-latest
