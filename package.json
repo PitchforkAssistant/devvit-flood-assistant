@@ -7,7 +7,8 @@
   "scripts": {
     "test": "npm run test:unit",
     "test:unit": "vitest --run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@devvit/protos": "0.11.0",
