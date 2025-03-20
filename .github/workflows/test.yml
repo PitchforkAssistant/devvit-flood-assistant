@@ -13,6 +13,8 @@ jobs:
         steps:
             -   name: checkout repo
                 uses: actions/checkout@v4
+                with: # give hint for pull requests
+                    ref: ${{ github.head_ref }}
             -   name: use node.js
                 uses: actions/setup-node@v4
                 with:
@@ -20,4 +22,4 @@ jobs:
             -   run: npm install
             -   run: npm run test:unit
             -   run: npm run lint:fix
-            -   run: npm run lint
+            -   uses: stefanzweifel/git-auto-commit-action@v5
