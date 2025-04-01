@@ -15,7 +15,7 @@
     "@devvit/public-api": "0.11.11",
     "@devvit/shared-types": "0.11.11",
     "date-fns": "^3.6.0",
-    "date-fns-tz": "^3.1.3",
+    "date-fns-tz": "^3.2.0",
     "devvit-helpers": "0.7.3"
   },
   "devDependencies": {
