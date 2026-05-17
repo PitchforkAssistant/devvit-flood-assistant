@@ -1,7 +1,7 @@
 import {Context, Devvit, Form, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler, User} from "@devvit/public-api";
 import {ERRORS, HELP_TEXT, LABELS} from "../constants.js";
-import {getPostsByAuthor} from "../helpers/redisHelpers.js";
-import {FloodingEvaluator} from "../evaluators.js";
+import {getTrackedPostsByAuthor} from "../core/redis/trackedPosts.js";
+import {FloodingEvaluator} from "../core/evaluators.js";
 import {getFloodAssistantConfigSlow} from "../appConfig.js";
 import {PostBasics, QuotaData} from "./userQuotaForm.js";
 import {userQuotaForm} from "../main.js";
@@ -27,40 +27,40 @@ export type EnterUserFormSubmitData = {
     username?: string;
 }
 
-const formHandler: FormOnSubmitEventHandler<EnterUserFormSubmitData> = async (event: FormOnSubmitEvent<EnterUserFormSubmitData>, context: Context) => {
+const formHandler: FormOnSubmitEventHandler<EnterUserFormSubmitData> = async (event: FormOnSubmitEvent<EnterUserFormSubmitData>, {redis, settings, reddit, ui}: Context) => {
     const username = event.values.username;
     if (!username || typeof username !== "string") {
-        context.ui.showToast({text: ERRORS.FORM_NO_USER, appearance: "neutral"});
+        ui.showToast({text: ERRORS.FORM_NO_USER, appearance: "neutral"});
         return;
     }
 
     let user: User | undefined;
     try {
-        user = await context.reddit.getUserByUsername(username);
+        user = await reddit.getUserByUsername(username);
         if (!user) {
-            throw new Error("User unde");
+            throw new Error("User undefined");
         }
     } catch (e) {
         console.log("Error getting user in form: ", e);
-        context.ui.showToast({text: ERRORS.FORM_INVALID_USER, appearance: "neutral"});
+        ui.showToast({text: ERRORS.FORM_INVALID_USER, appearance: "neutral"});
         return;
     }
 
     console.log("Lookup quota for ", user.username);
-    const trackedPostsRecord = await getPostsByAuthor(context.redis, user.id);
+    const trackedPostsRecord = await getTrackedPostsByAuthor({redis, authorId: user.id});
 
     if (Object.keys(trackedPostsRecord).length === 0) {
-        context.ui.showToast({text: `No tracked posts found for /u/${user.username}.`, appearance: "neutral"});
+        ui.showToast({text: `No tracked posts found for /u/${user.username}.`, appearance: "neutral"});
         return;
     }
 
-    const subreddit = await context.reddit.getCurrentSubreddit();
-    const config = await getFloodAssistantConfigSlow(context.settings);
-    const evaluator = new FloodingEvaluator(config, context.reddit, context.redis, subreddit, user);
+    const subreddit = await reddit.getCurrentSubreddit();
+    const config = await getFloodAssistantConfigSlow(settings);
+    const evaluator = new FloodingEvaluator(config, reddit, redis, subreddit, user);
 
     const postBasics: PostBasics[] = [];
     for (const postId of Object.keys(trackedPostsRecord)) {
-        const post = await context.reddit.getPostById(postId);
+        const post = await reddit.getPostById(postId);
         postBasics.push({
             id: post.id,
             title: post.title,
@@ -77,7 +77,7 @@ const formHandler: FormOnSubmitEventHandler<EnterUserFormSubmitData> = async (ev
     };
 
     console.log("User Quota Form Data: ", data);
-    context.ui.showForm(userQuotaForm, data);
+    ui.showForm(userQuotaForm, data);
 };
 
 export const enterUserForm: FormKey = Devvit.createForm(form, formHandler);

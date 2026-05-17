@@ -26,10 +26,10 @@ type ErrorFormSubmitData = {
     error?: string;
 }
 
-const formHandler: FormOnSubmitEventHandler<ErrorFormSubmitData> = async (event: FormOnSubmitEvent<ErrorFormSubmitData>, context: Context) => {
-    const appAccount = await context.reddit.getAppUser();
-    const subreddit = await context.reddit.getCurrentSubreddit();
-    context.ui.navigateTo(`https://developers.reddit.com/r/${subreddit.name}/apps/${appAccount.username}`);
+const formHandler: FormOnSubmitEventHandler<ErrorFormSubmitData> = async (event: FormOnSubmitEvent<ErrorFormSubmitData>, {reddit, ui}: Context) => {
+    const appAccount = await reddit.getAppUser();
+    const subreddit = await reddit.getCurrentSubreddit();
+    ui.navigateTo(`https://developers.reddit.com/r/${subreddit.name}/apps/${appAccount.username}`);
 };
 
 export const configErrorForm: FormKey = Devvit.createForm(form, formHandler);

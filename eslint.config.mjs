@@ -30,7 +30,8 @@ export default [{
     },
 
     files: [
-                "**/*.ts"
+                "**/*.ts",
+                "**/*.tsx"
             ],
 
     languageOptions: {

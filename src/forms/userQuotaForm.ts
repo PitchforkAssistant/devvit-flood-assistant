@@ -1,6 +1,6 @@
 import {Context, Devvit, FormFunction, FormKey, FormOnSubmitEvent, FormOnSubmitEventHandler} from "@devvit/public-api";
 import {ERRORS, EXCLUSION_REASONS, HELP_TEXT, LABELS} from "../constants.js";
-import {QuotaIncludedResult} from "../evaluators.js";
+import {QuotaIncludedResult} from "../core/evaluators.js";
 
 export type PostBasics = {
     createdAt: number;
@@ -67,14 +67,14 @@ export type QuotaFormSubmitData = {
     // We don't really care about the rest of the data from the disabled fields, so we won't define it here.
 }
 
-const formHandler: FormOnSubmitEventHandler<QuotaFormSubmitData> = async (event: FormOnSubmitEvent<QuotaFormSubmitData>, context: Context) => {
+const formHandler: FormOnSubmitEventHandler<QuotaFormSubmitData> = async (event: FormOnSubmitEvent<QuotaFormSubmitData>, {ui}: Context) => {
     if (!Array.isArray(event.values.selectPost) || event.values.selectPost.length === 0 || !event.values.selectPost[0] || typeof event.values.selectPost[0] !== "string") {
-        context.ui.showToast({text: ERRORS.FORM_NO_POST_SELECTED, appearance: "neutral"});
+        ui.showToast({text: ERRORS.FORM_NO_POST_SELECTED, appearance: "neutral"});
         return;
     }
 
     const postId = event.values.selectPost[0];
-    context.ui.navigateTo(`https://reddit.com/comments/${postId.substring(3)}`);
+    ui.navigateTo(`https://reddit.com/comments/${postId.substring(3)}`);
 };
 
 export const userQuotaForm: FormKey = Devvit.createForm(form, formHandler);

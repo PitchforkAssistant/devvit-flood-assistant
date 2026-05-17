@@ -1,10 +1,10 @@
 import {TriggerEventType, TriggerContext} from "@devvit/public-api";
 import {startSingletonJob} from "devvit-helpers";
 import {KEYS} from "../constants.js";
-import {migrate} from "../helpers/migrationHelper.js";
+import {migrate} from "../core/redis/migrationHelper.js";
 
 export async function onAppChanged (event: TriggerEventType["AppInstall" | "AppUpgrade"], context: TriggerContext) {
-    console.log(`Running ${event.type} `);
+    console.log(`Running ${event.type}`);
 
     try {
         console.log(`Scheduling ${KEYS.JOB_CLEAR} job in ${event.type}`);

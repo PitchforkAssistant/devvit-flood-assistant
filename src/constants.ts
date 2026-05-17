@@ -1,4 +1,4 @@
-import {QuotaExclusionReason} from "./evaluators.js";
+import {QuotaExclusionReason} from "./core/evaluators.js";
 
 export const LATEST_VERSION = 0;
 

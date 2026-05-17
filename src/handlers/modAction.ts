@@ -1,9 +1,9 @@
 import {ModAction} from "@devvit/protos";
 import {TriggerContext} from "@devvit/public-api";
-import {trackActionTime, untrackActionTime} from "../helpers/redisHelpers.js";
+import {addTrackedActionTime, remTrackedActionTime} from "../core/redis/trackedActions.js";
 import {DEFAULTS, KEYS} from "../constants.js";
 
-export async function onModAction (event: ModAction, context: TriggerContext) {
+export async function onModAction (event: ModAction, {redis, settings}: TriggerContext) {
     // We're only interested in link removals
     if (event.action !== "removelink" && event.action !== "spamlink" && event.action !== "approvelink") {
         return;
@@ -18,7 +18,7 @@ export async function onModAction (event: ModAction, context: TriggerContext) {
         return;
     }
 
-    const quotaPeriod = await context.settings.get<number>(KEYS.QUOTA_PERIOD) ?? DEFAULTS.MAX_QUOTA_PERIOD;
+    const quotaPeriod = await settings.get<number>(KEYS.QUOTA_PERIOD) ?? DEFAULTS.MAX_QUOTA_PERIOD;
     if (actionedAt.getTime() - createdAt > quotaPeriod * 1000 * 60 * 60) {
         console.log(`Ignoring ${event.action} for ${postId} as it's too old`);
         return;
@@ -26,8 +26,8 @@ export async function onModAction (event: ModAction, context: TriggerContext) {
 
     console.log(`tracking ${event.action} for ${postId}`);
     if (event.action === "approvelink") {
-        await untrackActionTime(context.redis, "remove", postId);
+        await remTrackedActionTime({redis, action: "remove", postId});
     } else {
-        await trackActionTime(context.redis, "remove", postId, actionedAt);
+        await addTrackedActionTime({redis, action: "remove", postId, actionedAt});
     }
 }

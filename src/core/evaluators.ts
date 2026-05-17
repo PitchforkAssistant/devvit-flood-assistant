@@ -1,8 +1,9 @@
 
 import {Post, RedditAPIClient, RedisClient, Subreddit, User} from "@devvit/public-api";
-import {FloodAssistantConfig} from "./appConfig.js";
+import {FloodAssistantConfig} from "../appConfig.js";
 import {isContributor, isModerator} from "devvit-helpers";
-import {clearOldPosts, getActionTime, getPostsByAuthor} from "./helpers/redisHelpers.js";
+import {getTrackedActionTime} from "./redis/trackedActions.js";
+import {purgeOldTrackedPosts, getTrackedPostsByAuthor} from "./redis/trackedPosts.js";
 
 export type QuotaExclusionReason = "age" | "currentPost" | "deleted" | "removed" | "autoRemoved" | "floodingRemoved";
 
@@ -105,7 +106,7 @@ export class FloodingEvaluator {
             }
 
             // Get the removal time for the post. If it doesn't exist, we can assume it wasn't deleted after being removed.
-            const removeTime = await getActionTime(this.redis, "remove", post.id);
+            const removeTime = await getTrackedActionTime({redis: this.redis, action: "remove", postId: post.id});
             if (!removeTime) {
                 return {included: false, exclusionReason: "deleted"};
             }
@@ -114,7 +115,7 @@ export class FloodingEvaluator {
             // If it doesn't exist, but the removal time does, it was probably removed before the app started tracking deletions.
             // That shouldn't happen though because it would also mean it was deleted before being created, which is impossible.
             // Regardless of how it might happen, it implies the post was deleted before being removed, so it counts under the ignoreDeleted setting.
-            const deleteTime = await getActionTime(this.redis, "delete", post.id);
+            const deleteTime = await getTrackedActionTime({redis: this.redis, action: "delete", postId: post.id});
             if (!deleteTime) {
                 return {included: false, exclusionReason: "deleted"};
             }
@@ -141,7 +142,7 @@ export class FloodingEvaluator {
 
             // If the post was removed within 60 seconds of being created, it was probably auto-removed.
             // Also if the removeTime doesn't exist here, it was probably removed by something that doesn't trigger onModAction.
-            const removeTime = await getActionTime(this.redis, "remove", post.id);
+            const removeTime = await getTrackedActionTime({redis: this.redis, action: "remove", postId: post.id});
             if (!removeTime) {
                 console.warn(`Post ${post.id} has no removeTime, was it removed without triggering onModAction? Cause: ${post.removedByCategory}`);
             } else if (removeTime.getTime() - post.createdAt.getTime() < 60 * 1000) {
@@ -164,9 +165,9 @@ export class FloodingEvaluator {
         }
 
         // Clear old posts from Redis
-        await clearOldPosts(this.redis, this.cutoff);
+        await purgeOldTrackedPosts({redis: this.redis, oldestAllowed: this.cutoff});
 
-        const trackedPosts = await getPostsByAuthor(this.redis, this.author.id);
+        const trackedPosts = await getTrackedPostsByAuthor({redis: this.redis, authorId: this.author.id});
 
         console.log(`Posts tracked for ${this.author.username}: ${Object.keys(trackedPosts).join(", ")}`);
 

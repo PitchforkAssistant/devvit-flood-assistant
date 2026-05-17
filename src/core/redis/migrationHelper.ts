@@ -1,5 +1,5 @@
 import {RedisClient, TriggerContext} from "@devvit/public-api";
-import {KEYS, LATEST_VERSION} from "../constants.js";
+import {KEYS, LATEST_VERSION} from "../../constants.js";
 
 export async function getInstalledVersion (redis: RedisClient): Promise<number> {
     try {

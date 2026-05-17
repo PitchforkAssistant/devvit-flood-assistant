@@ -3,21 +3,21 @@ import {HELP_TEXT, LABELS} from "../constants.js";
 import {getFloodAssistantConfigSlow} from "../appConfig.js";
 import {configErrorForm, enterUserForm} from "../main.js";
 
-const onPress = async (event: MenuItemOnPressEvent, context: Context) => {
+const onPress = async (event: MenuItemOnPressEvent, {ui, settings}: Context) => {
     console.log("Quota form opened: ", event);
     try {
-        const config = await getFloodAssistantConfigSlow(context.settings);
+        const config = await getFloodAssistantConfigSlow(settings);
         console.log("FloodAssistantConfig: ", config);
-        context.ui.showForm(enterUserForm);
+        ui.showForm(enterUserForm);
     } catch (e) {
         const error = e as Error;
         if (error.name === "FloodAssistantConfigError") {
             console.error(`Error getting FloodAssistantConfig: ${String(e)}`);
-            context.ui.showForm(configErrorForm, {errorName: error.name, errorMessage: error.message});
+            ui.showForm(configErrorForm, {errorName: error.name, errorMessage: error.message});
             return;
         } else {
             console.error(`Error opening quota form: ${String(e)}`);
-            context.ui.showToast({text: `ERROR: Something went wrong while trying to open the form. (${error.name})`, appearance: "neutral"});
+            ui.showToast({text: `ERROR: Something went wrong while trying to open the form. (${error.name})`, appearance: "neutral"});
             return;
         }
     }

@@ -1,10 +1,11 @@
 import {PostCreate} from "@devvit/protos";
 import {SetPostFlairOptions, TriggerContext} from "@devvit/public-api";
 import {getFloodAssistantConfigSlow} from "../appConfig.js";
-import {FloodingEvaluator} from "../evaluators.js";
+import {FloodingEvaluator} from "../core/evaluators.js";
 import {assembleRemovalReason, getRecommendedPlaceholdersFromPost, safeFormatInTimeZone, submitPostReply} from "devvit-helpers";
+import {addTrackedPost, isTrackedPost} from "../core/redis/trackedPosts.js";
 
-export async function onPostCreate (event: PostCreate, context: TriggerContext) {
+export async function onPostCreate (event: PostCreate, {reddit, settings, redis}: TriggerContext) {
     console.log("running onPostCreate");
 
     const postId = event.post?.id;
@@ -13,10 +14,22 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
         throw new Error(`Missing authorId (${authorId}) or postId (${postId}) in onPostCreate`);
     }
 
-    const config = await getFloodAssistantConfigSlow(context.settings);
-    const subreddit = await context.reddit.getCurrentSubreddit();
-    const author = await context.reddit.getUserById(authorId);
-    const post = await context.reddit.getPostById(postId);
+    // Mitigation and monitoring issues with PostSubmit, which sometimes just decides not to work.
+    if (!await isTrackedPost({redis, authorId, postId})) {
+        console.warn(`Post ${postId} by ${authorId} made it to onPostCreate without being tracked in Redis, did PostSubmit fail to trigger?`);
+
+        await addTrackedPost({
+            redis,
+            authorId,
+            postId,
+            createdAt: event.post?.createdAt ? new Date(event.post.createdAt) : undefined,
+        });
+    }
+
+    const config = await getFloodAssistantConfigSlow(settings);
+    const subreddit = await reddit.getCurrentSubreddit();
+    const author = await reddit.getUserById(authorId);
+    const post = await reddit.getPostById(postId);
 
     if (!author) {
         console.error(`Failed to get author ${authorId} for evaluating post ${postId}`);
@@ -24,7 +37,7 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
     }
 
     console.log("Creating FloodingEvaluator");
-    const evaluator = new FloodingEvaluator(config, context.reddit, context.redis, subreddit, author, post);
+    const evaluator = new FloodingEvaluator(config, reddit, redis, subreddit, author, post);
 
     console.log("Checking if user should be ignored");
     if (await evaluator.isIgnoredUser()) {
@@ -40,7 +53,7 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
     console.log(`New post ${postId} by ${author.username} exceeds quota, removing`);
 
     // Double check that the post hasn't been removed while we were evaluating it.
-    const refetchedPost = await context.reddit.getPostById(postId);
+    const refetchedPost = await reddit.getPostById(postId);
     if (refetchedPost.isRemoved() ||
            refetchedPost.isSpam() ||
            refetchedPost.removedByCategory && refetchedPost.removedByCategory !== "automod_filtered" && refetchedPost.removedByCategory !== "reddit") {
@@ -72,12 +85,12 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
         "{{quota_oldest_url}}": oldestQuotaPost?.permalink ? `https://reddit.com${oldestQuotaPost?.permalink}` : "",
         "{{quota_newest_id}}": (newestQuotaPost?.id ?? "").substring(3),
         "{{quota_newest_url}}": newestQuotaPost?.permalink ? `https://reddit.com${newestQuotaPost?.permalink}` : "",
-        "{{mod}}": (await context.reddit.getAppUser()).username,
+        "{{mod}}": (await reddit.getAppUser()).username,
     };
 
     if (config.removalComment) {
         const commentText = assembleRemovalReason({body: config.removalComment}, placeholders, extraPlaceholders);
-        await submitPostReply(context.reddit, post.id, commentText, true, true).catch(e => console.error(`Failed to add removal comment to ${postId}`, e));
+        await submitPostReply(reddit, post.id, commentText, true, true).catch(e => console.error(`Failed to add removal comment to ${postId}`, e));
     }
 
     if (config.removalFlair) {
@@ -89,7 +102,7 @@ export async function onPostCreate (event: PostCreate, context: TriggerContext) 
             cssClass: config.removalFlair.cssClass,
             text: flairText,
         };
-        await context.reddit.setPostFlair(flairOptions).catch(e => console.error(`Failed to set ${postId} removal flair`, e));
+        await reddit.setPostFlair(flairOptions).catch(e => console.error(`Failed to set ${postId} removal flair`, e));
     }
 
     if (config.removalLock) {
