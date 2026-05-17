@@ -19,12 +19,12 @@
     "devvit-helpers": "0.7.3"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.16",
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^9.23.0",
-    "eslint-plugin-vitest": "^0.5.4",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/parser": "^8.59.3",
+    "@vitest/eslint-plugin": "^1.6.17",
+    "eslint": "^10.4.0",
     "typescript": "^5.8.2",
-    "vitest": "^3.0.9"
+    "typescript-eslint": "^8.59.3",
+    "vitest": "^4.1.6"
   }
 }
