@@ -1,6 +1,6 @@
-import {isT3ID} from "@devvit/shared-types/tid.js";
 import {isValidDate, zScanAll} from "devvit-helpers";
 import {NeedsRedis} from "../types/needs.js";
+import {isLinkId} from "@devvit/public-api/types/tid.js";
 
 export const TRACKED_POSTS_KEY = "posts";
 
@@ -109,7 +109,7 @@ export async function getTrackedPostsByAuthor ({redis, authorId}: GetTrackedPost
     const posts: Record<string, Date> = {};
     storedPosts.forEach(post => {
         const [, postId] = post.member.split(":");
-        if (isT3ID(postId)) {
+        if (isLinkId(postId)) {
             posts[postId] = new Date(post.score);
         }
     });
