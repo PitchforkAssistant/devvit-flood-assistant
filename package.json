@@ -5,8 +5,9 @@
   "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {
-    "test": "npm run test:unit",
+    "test": "npm run test:unit && npm run test:build",
     "test:unit": "vitest --run",
+    "test:build": "tsc --build --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
