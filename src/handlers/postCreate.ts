@@ -40,7 +40,7 @@ export async function onPostCreate (event: PostCreate, {reddit, settings, redis}
     const evaluator = new FloodingEvaluator(config, reddit, redis, subreddit, author, post);
 
     console.log("Checking if user should be ignored");
-    if (await evaluator.isIgnoredUser()) {
+    if (await evaluator.isIgnoredUser()) { // TODO: Decouple ignored users from flooding evaluator, that should be separate
         console.log(`User ${author.username} is in ignored group, skipping flood check`);
         return;
     }
@@ -51,6 +51,8 @@ export async function onPostCreate (event: PostCreate, {reddit, settings, redis}
         return;
     }
     console.log(`New post ${postId} by ${author.username} exceeds quota, removing`);
+
+    // TODO: Split removal handling into a separate function
 
     // Double check that the post hasn't been removed while we were evaluating it.
     const refetchedPost = await reddit.getPostById(postId);
