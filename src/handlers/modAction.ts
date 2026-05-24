@@ -2,6 +2,7 @@ import {ModAction} from "@devvit/protos";
 import {TriggerContext} from "@devvit/public-api";
 import {addTrackedActionTime, remTrackedActionTime} from "../core/redis/trackedActions.js";
 import {DEFAULTS, KEYS} from "../constants.js";
+import {hoursToMillis} from "../core/utils/time.js";
 
 export async function onModAction (event: ModAction, {redis, settings}: TriggerContext) {
     // We're only interested in link removals
@@ -21,7 +22,7 @@ export async function onModAction (event: ModAction, {redis, settings}: TriggerC
 
     const quotaPeriod = await settings.get<number>(KEYS.QUOTA_PERIOD) ?? DEFAULTS.MAX_QUOTA_PERIOD;
 
-    if (actionedAt.getTime() - createdAt > quotaPeriod * 1000 * 60 * 60) { // TODO: hours to millis helper func instead of repeating this calculation everywhere
+    if (actionedAt.getTime() - createdAt > hoursToMillis(quotaPeriod)) { // TODO: hours to millis helper func instead of repeating this calculation everywhere
         console.log(`Ignoring ${event.action} for ${postId} as it's too old`);
         return;
     }

@@ -2,6 +2,7 @@ import {PostDelete} from "@devvit/protos";
 import {TriggerContext} from "@devvit/public-api";
 import {addTrackedActionTime} from "../core/redis/trackedActions.js";
 import {DEFAULTS, KEYS} from "../constants.js";
+import {hoursToMillis} from "../core/utils/time.js";
 
 export async function onPostDelete (event: PostDelete, {redis, settings}: TriggerContext) {
     // The PostDelete event name is a bit misleading,
@@ -20,7 +21,7 @@ export async function onPostDelete (event: PostDelete, {redis, settings}: Trigge
     }
 
     const quotaPeriod = await settings.get<number>(KEYS.QUOTA_PERIOD) ?? DEFAULTS.MAX_QUOTA_PERIOD;
-    if (deletedAt.getTime() - createdAt.getTime() > quotaPeriod * 1000 * 60 * 60) {
+    if (deletedAt.getTime() - createdAt.getTime() > hoursToMillis(quotaPeriod)) {
         console.log(`Ignoring deletion for ${event.postId} by ${event.author?.id} as it's too old`);
         return;
     }

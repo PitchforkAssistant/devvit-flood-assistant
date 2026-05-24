@@ -4,6 +4,7 @@ import {FloodAssistantConfig} from "../appConfig.js";
 import {isContributor, isModerator} from "devvit-helpers";
 import {getTrackedActionTime} from "./redis/trackedActions.js";
 import {purgeOldTrackedPosts, getTrackedPostsByAuthor} from "./redis/trackedPosts.js";
+import {hoursToMillis, minutesToMillis} from "./utils/time.js";
 
 export type QuotaExclusionReason = "age" | "currentPost" | "deleted" | "removed" | "autoRemoved" | "floodingRemoved";
 
@@ -27,10 +28,10 @@ export class FloodingEvaluator {
         protected currentPost?: Post
     ) {
         this.now = new Date();
-        this.cutoff = new Date(this.now.getTime() - this.config.quotaPeriod * 60 * 60 * 1000);
+        this.cutoff = new Date(this.now.getTime() - hoursToMillis(this.config.quotaPeriod));
 
         // If the current time is more than 5 minutes ahead of the post creation time, something might be wrong.
-        if (this.currentPost && this.now.getTime() - this.currentPost.createdAt.getTime() > 5 * 60 * 1000) {
+        if (this.currentPost && this.now.getTime() - this.currentPost.createdAt.getTime() > minutesToMillis(5)) {
             console.warn(`Post ${this.currentPost.id} was created at ${this.currentPost.createdAt.toISOString()}, but the current time is ${this.now.toISOString()}! Is Devvit backlogged?`);
         }
     }
@@ -145,7 +146,7 @@ export class FloodingEvaluator {
             const removeTime = await getTrackedActionTime({redis: this.redis, action: "remove", postId: post.id});
             if (!removeTime) {
                 console.warn(`Post ${post.id} has no removeTime, was it removed without triggering onModAction? Cause: ${post.removedByCategory}`);
-            } else if (removeTime.getTime() - post.createdAt.getTime() < 60 * 1000) {
+            } else if (removeTime.getTime() - post.createdAt.getTime() < minutesToMillis(1)) {
                 return {included: false, exclusionReason: "autoRemoved"};
             }
         }
@@ -239,7 +240,7 @@ export class FloodingEvaluator {
         if (freeSpotIndex < 0 || freeSpotIndex >= includedPosts.length) {
             return this.now;
         } else {
-            return new Date(includedPosts[freeSpotIndex].createdAt.getTime() + this.config.quotaPeriod * 60 * 60 * 1000);
+            return new Date(includedPosts[freeSpotIndex].createdAt.getTime() + hoursToMillis(this.config.quotaPeriod));
         }
     }
 

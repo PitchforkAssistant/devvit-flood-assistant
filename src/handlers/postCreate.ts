@@ -4,6 +4,7 @@ import {getFloodAssistantConfigSlow} from "../appConfig.js";
 import {FloodingEvaluator} from "../core/evaluators.js";
 import {assembleRemovalReason, getRecommendedPlaceholdersFromPost, safeFormatInTimeZone, submitPostReply} from "devvit-helpers";
 import {addTrackedPost, isTrackedPost} from "../core/redis/trackedPosts.js";
+import {millisToSeconds} from "../core/utils/time.js";
 
 export async function onPostCreate (event: PostCreate, {reddit, settings, redis}: TriggerContext) {
     console.log(`running onPostCreate for ${event.post?.id} by ${event.author?.id}`);
@@ -80,7 +81,7 @@ export async function onPostCreate (event: PostCreate, {reddit, settings, redis}
         "{{author_flair_template_id}}": event.post?.authorFlair?.templateId ?? "",
         "{{quota_amount}}": config.quotaAmount.toString(),
         "{{quota_period}}": config.quotaPeriod.toString(),
-        "{{quota_next_unix}}": (nextPostOpportunity.getTime() / 1000).toString(),
+        "{{quota_next_unix}}": millisToSeconds(nextPostOpportunity.getTime()).toString(),
         "{{quota_next_iso}}": nextPostOpportunity.toISOString(),
         "{{quota_next_custom}}": safeFormatInTimeZone(nextPostOpportunity, config.customDateformat),
         "{{quota_oldest_id}}": (oldestQuotaPost?.id ?? "").substring(3),
