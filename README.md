@@ -6,6 +6,14 @@ FloodAssistant (or FloodingAssistant) is a Devvit app that allows you to restric
 
 This section summarizes the changes made for each published version of the app, unpublished versions are not listed, but you can always view the full changes to the code on [GitHub](https://github.com/PitchforkAssistant/devvit-flood-assistant).
 
+### 1.4.0
+
+- Added a fallback to track posts in PostCreate if PostSubmit fails to run first.
+- Improved tracking of removal timestamps.
+- More logging to help diagnose suspected issues with trigger data.
+- Refactored some of the code to make new features easier to implement (still a WIP on that).
+- Upgraded to Devvit [0.12.24](https://www.reddit.com/r/Devvit/comments/1tgudfp/release_01224_app_profile_icons/)
+
 ### 1.3.0
 
 - Fixed an issue where the app was unable to retrieve tracked posts in some subreddits with very high post volume or a very long quota period.
