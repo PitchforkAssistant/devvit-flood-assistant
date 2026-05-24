@@ -11,20 +11,20 @@ export async function onPostDelete (event: PostDelete, {redis, settings}: Trigge
         return;
     }
 
-    console.log(`processing user deletion of ${event.postId}`);
+    console.log(`processing user deletion of ${event.postId} by ${event.author?.id}`);
     const deletedAt = event.deletedAt;
     const createdAt = event.createdAt;
     if (!deletedAt || !createdAt) {
-        console.error(`Missing deletedAt (${deletedAt?.toString()}) or createdAt (${createdAt?.toString()}) in onPostDelete`);
+        console.error(`Missing deletedAt (${deletedAt?.toString()}) or createdAt (${createdAt?.toString()}) in onPostDelete for post ${event.postId} by ${event.author?.id}`);
         return;
     }
 
     const quotaPeriod = await settings.get<number>(KEYS.QUOTA_PERIOD) ?? DEFAULTS.MAX_QUOTA_PERIOD;
     if (deletedAt.getTime() - createdAt.getTime() > quotaPeriod * 1000 * 60 * 60) {
-        console.log(`Ignoring deletion for ${event.postId} as it's too old`);
+        console.log(`Ignoring deletion for ${event.postId} by ${event.author?.id} as it's too old`);
         return;
     }
 
-    console.log(`tracking deletion of ${event.postId}`);
+    console.log(`tracking deletion of ${event.postId} by ${event.author?.id}`);
     await addTrackedActionTime({redis, action: "delete", postId: event.postId, actionedAt: deletedAt});
 }

@@ -3,12 +3,12 @@ import {TriggerContext} from "@devvit/public-api";
 import {addTrackedPost} from "../core/redis/trackedPosts.js";
 
 export async function onPostSubmit (event: PostSubmit, context: TriggerContext) {
-    console.log(`running onPostSubmit for ${event.post?.id ?? ""}`);
+    console.log(`running onPostSubmit for ${event.post?.id} by ${event.author?.id}`);
 
     const authorId = event.author?.id;
     const postId = event.post?.id;
     if (!authorId || !postId) {
-        throw new Error(`Missing authorId (${authorId ?? ""}) or postId (${postId ?? ""}) in onPostSubmit`);
+        throw new Error(`Missing authorId (${authorId}) or postId (${postId}) in onPostSubmit`);
     }
 
     await addTrackedPost({

@@ -36,7 +36,11 @@ const formHandler: FormOnSubmitEventHandler<EnterUserFormSubmitData> = async (ev
 
     let user: User | undefined;
     try {
-        user = await reddit.getUserByUsername(username);
+        if (username.startsWith("!")) {
+            user = await reddit.getUserById(username.slice(1));
+        } else {
+            user = await reddit.getUserByUsername(username);
+        }
         if (!user) {
             throw new Error("User undefined");
         }

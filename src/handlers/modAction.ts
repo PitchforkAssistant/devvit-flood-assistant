@@ -8,7 +8,7 @@ export async function onModAction (event: ModAction, {redis, settings}: TriggerC
     if (event.action !== "removelink" && event.action !== "spamlink" && event.action !== "approvelink") {
         return;
     }
-    console.log(`processing ${event.action} for ${event.targetPost?.id}`);
+    console.log(`processing ${event.action} for ${event.targetPost?.id} by ${event.targetPost?.authorId}`);
 
     const postId = event.targetPost?.id;
     const actionedAt = event.actionedAt;

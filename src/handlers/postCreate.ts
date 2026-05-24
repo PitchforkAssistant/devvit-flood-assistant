@@ -6,7 +6,7 @@ import {assembleRemovalReason, getRecommendedPlaceholdersFromPost, safeFormatInT
 import {addTrackedPost, isTrackedPost} from "../core/redis/trackedPosts.js";
 
 export async function onPostCreate (event: PostCreate, {reddit, settings, redis}: TriggerContext) {
-    console.log("running onPostCreate");
+    console.log(`running onPostCreate for ${event.post?.id} by ${event.author?.id}`);
 
     const postId = event.post?.id;
     const authorId = event.author?.id;
