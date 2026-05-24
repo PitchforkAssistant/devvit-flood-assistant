@@ -11,7 +11,7 @@ export async function onPostCreate (event: PostCreate, {reddit, settings, redis}
 
     const postId = event.post?.id;
     const authorId = event.author?.id;
-    if (!authorId || !postId) {
+    if (!authorId || !postId || authorId === "t2_0" || postId === "t3_0") {
         throw new Error(`Missing authorId (${authorId}) or postId (${postId}) in onPostCreate`);
     }
 

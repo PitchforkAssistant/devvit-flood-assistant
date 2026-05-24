@@ -4,7 +4,7 @@ import {KEYS} from "../constants.js";
 import {migrate} from "../core/redis/migrationHelper.js";
 
 export async function onAppChanged (event: TriggerEventType["AppInstall" | "AppUpgrade"], context: TriggerContext) {
-    console.log(`Running ${event.type}`);
+    console.log(`Running ${event.type}`, event);
 
     try {
         console.log(`Scheduling ${KEYS.JOB_CLEAR} job in ${event.type}`);

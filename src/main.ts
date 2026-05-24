@@ -1,12 +1,12 @@
 import {Devvit} from "@devvit/public-api";
 import {LABELS, HELP_TEXT, DEFAULTS, ERRORS} from "./constants.js";
 import {LOCALE_OPTIONS, validateCustomDateformat, validateCustomLocale, validateCustomTimezone, validatePositiveInteger, validatePositiveNumber} from "devvit-helpers";
-import {onAppChanged} from "./handlers/appChanged.js";
-import {onModAction} from "./handlers/modAction.js";
-import {onPostCreate} from "./handlers/postCreate.js";
-import {onPostSubmit} from "./handlers/postSubmit.js";
-import {onRunClearOldPosts} from "./handlers/scheduler.js";
-import {onPostDelete} from "./handlers/postDelete.js";
+import {onAppChanged} from "./triggers/appChanged.js";
+import {onModAction} from "./triggers/modAction.js";
+import {onPostCreate} from "./triggers/postCreate.js";
+import {onPostSubmit} from "./triggers/postSubmit.js";
+import {onRunClearOldPosts} from "./triggers/scheduler.js";
+import {onPostDelete} from "./triggers/postDelete.js";
 
 export {quotaButton} from "./buttons/quotaButton.js";
 export {configErrorForm} from "./forms/configErrorForm.js";

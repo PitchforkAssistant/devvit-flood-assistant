@@ -7,7 +7,7 @@ export async function onPostSubmit (event: PostSubmit, context: TriggerContext) 
 
     const authorId = event.author?.id;
     const postId = event.post?.id;
-    if (!authorId || !postId) {
+    if (!authorId || !postId || authorId === "t2_0" || postId === "t3_0") {
         throw new Error(`Missing authorId (${authorId}) or postId (${postId}) in onPostSubmit`);
     }
 
